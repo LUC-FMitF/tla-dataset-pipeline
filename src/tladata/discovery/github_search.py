@@ -1,41 +1,24 @@
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, cast
 from datetime import datetime, timezone
-import requests
-import os
-
-BASE_URL: str = "https://api.github.com"
+from tladata.discovery.github_client import GithubClient
 
 
-def _headers() -> Dict[str, str]:
-    token = os.environ.get("GITHUB_TOKEN")
-    return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+def search_repositories(
+    client: GithubClient, query: str, per_page: int = 50
+) -> List[Dict[str, Any]]:
 
-
-def search_repositories(query: str, per_page: int = 50) -> List[Dict[str, Any]]:
-    url = f"{BASE_URL}/search/repositories"
     params: Dict[str, Any] = {"q": query, "per_page": per_page}
-
-    resp = requests.get(url, headers=_headers(), params=params)
-    resp.raise_for_status()
-    data = cast(Dict[str, Any], resp.json())
-
+    data = client.get("/search/repositories", params=params)
     return cast(List[Dict[str, Any]], data.get("items", []))
 
 
-def fetch_repo_metadata(full_name: str, source: str) -> Dict[str, Any]:
-    url = f"{BASE_URL}/repos/{full_name}"
-    resp = requests.get(url, headers=_headers())
-    resp.raise_for_status()
-    repo = resp.json()
+def fetch_repo_metadata(client: GithubClient, full_name: str, source: str) -> Dict[str, Any]:
 
+    repo = client.get(f"/repos/{full_name}")
     default_branch = repo["default_branch"]
 
     # Get HEAD SHA
-    branch_url = f"{BASE_URL}/repos/{full_name}/branches/{default_branch}"
-    branch_resp = requests.get(branch_url, headers=_headers())
-    branch_resp.raise_for_status()
-    branch = branch_resp.json()
-
+    branch = client.get(f"/repos/{full_name}/branches/{default_branch}")
     sha = branch["commit"]["sha"]
 
     return {
