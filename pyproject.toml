@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tla-dataset-pipeline"
+version = "0.1.0"
+description = "TLA+ dataset discovery and pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Author", email = "author@example.com"}
+]
+keywords = ["tla", "dataset", "discovery", "github"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+    "requests>=2.31.0",
+    "jsonschema>=4.20.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.7.0",
+    "ruff>=0.0.287",
+    "mypy>=1.5.0",
+    "types-PyYAML>=6.0",
+    "types-requests>=2.31.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/LUC-FMitF/tla-dataset-pipeline"
+Repository = "https://github.com/LUC-FMitF/tla-dataset-pipeline"
+Issues = "https://github.com/LUC-FMitF/tla-dataset-pipeline/issues"
+
+[tool.setuptools]
+packages = ["tladata", "tladata.contracts", "tladata.discovery", "tladata.utils"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+tladata = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=src/tladata --cov-report=term-out --cov-report=html"
