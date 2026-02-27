@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional, cast
 import requests
 
+"""GithubClient is a simple wrapper around the GitHub API using requests. It handles authentication and provides a method for making GET requests to the API."""
 
 class GithubClient:
     def __init__(self, token: str) -> None:

@@ -2,6 +2,7 @@ from typing import Any, Dict, List, cast
 from datetime import datetime, timezone
 from tladata.discovery.github_client import GithubClient
 
+"""This module contains functions for searching GitHub repositories and fetching their metadata using the GitHub API."""
 
 def search_repositories(
     client: GithubClient, query: str, per_page: int = 50
