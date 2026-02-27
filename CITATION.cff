@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "TLA+ Dataset Pipeline"
+authors:
+  - name: "LUC-FMitF"
+    family-names: "LUC-FMitF"
+  - name: "Brian Ortiz"
+    family-names: "Ortiz"
+date-released: 2026-02-26
+version: 0.1.0
+repository-code: "https://github.com/LUC-FMitF/tla-dataset-pipeline"
+url: "https://github.com/LUC-FMitF/tla-dataset-pipeline"
+license: MIT
+description: >-
+  A Python pipeline for discovering and validating TLA+ repositories
+  from GitHub, extracting metadata, and maintaining a structured dataset
+  of TLA+ projects. With plans to expand to include more sources and richer metadata in the future.
+keywords:
+  - "TLA+"
+  - "formal-methods"
+  - "dataset"
+  - "github-discovery"
