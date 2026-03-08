@@ -25,7 +25,6 @@ jobs:
       - uses: psf/black@24.1.1
         with:
           src: './src'
-          options: '--check'
 
   mypy-type-check:
     runs-on: ubuntu-latest
