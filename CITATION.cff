@@ -5,6 +5,10 @@ authors:
     family-names: "LUC-FMitF"
   - name: "Brian Ortiz"
     family-names: "Ortiz"
+  - name: "Arslan Bisharat"
+    family-names: "Bisharat"
+  - name: "Eric Spencer"
+    family-names: "Spencer"
 date-released: 2026-02-26
 version: 0.1.0
 repository-code: "https://github.com/LUC-FMitF/tla-dataset-pipeline"
