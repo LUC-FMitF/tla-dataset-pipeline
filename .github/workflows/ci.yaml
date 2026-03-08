@@ -1,0 +1,28 @@
+name: Lint and Format
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - '**'
+
+jobs:
+  ruff-lint:
+    runs-on: ubuntu-latest
+    name: Ruff Linting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v1
+        with:
+          args: 'check src/'
+
+  black-format:
+    runs-on: ubuntu-latest
+    name: Black Formatting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@24.1.1
+        with:
+          src: './src'
+          options: '--check'
