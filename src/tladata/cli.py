@@ -1,4 +1,5 @@
 """Command-line interface for tladata."""
+
 import argparse
 import os
 import sys
@@ -23,6 +24,7 @@ def get_github_client() -> GithubClient:
 
 
 # Discovery subcommands
+
 
 def discover(args: argparse.Namespace) -> int:
     """Run full discovery pipeline: seeds + search + write + validate."""
@@ -73,6 +75,7 @@ def fetch_seeds(args: argparse.Namespace) -> int:
 
 # Standalone validation command
 
+
 def validate_manifest(args: argparse.Namespace) -> int:
     """Validate a JSONL manifest file against a JSON schema."""
     # Convert to absolute paths if relative
@@ -109,12 +112,10 @@ def validate_manifest(args: argparse.Namespace) -> int:
 
 # Main entry points
 
+
 def main_discover() -> int:
     """Main entry point for discovery commands."""
-    parser = argparse.ArgumentParser(
-        description="TLA Dataset Discovery Pipeline",
-        prog="tladata"
-    )
+    parser = argparse.ArgumentParser(description="TLA Dataset Discovery Pipeline", prog="tladata")
 
     # Global arguments
     parser.add_argument(
@@ -195,7 +196,8 @@ def main_validate() -> int:
         help="Path to the JSON schema file (default: data_contracts/schemas/source_record.schema.json)",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Print all validation errors (not just summary)",
     )

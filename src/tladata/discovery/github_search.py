@@ -5,6 +5,7 @@ from tladata.discovery.github_client import GithubClient
 
 """This module contains functions for searching GitHub repositories and fetching their metadata using the GitHub API."""
 
+
 def search_repositories(
     client: GithubClient, query: str, per_page: int = 50
 ) -> list[dict[str, Any]]:
