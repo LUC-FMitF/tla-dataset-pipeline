@@ -102,7 +102,7 @@ def validate_manifest(args: argparse.Namespace) -> int:
             for error in errors[:10]:
                 print(f"  {error}")
             print(f"\n  ... and {len(errors) - 10} more errors")
-            print(f"\nRun with -v/--verbose to see all errors")
+            print("\nRun with -v/--verbose to see all errors")
 
         return 1
 
