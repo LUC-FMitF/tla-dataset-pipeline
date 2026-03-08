@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tla-dataset-pipeline"
+name = "tladata"
 version = "0.1.0"
 description = "TLA+ dataset discovery and pipeline"
 readme = "README.md"
@@ -47,6 +47,9 @@ dev = [
 Homepage = "https://github.com/LUC-FMitF/tla-dataset-pipeline"
 Repository = "https://github.com/LUC-FMitF/tla-dataset-pipeline"
 Issues = "https://github.com/LUC-FMitF/tla-dataset-pipeline/issues"
+
+[project.scripts]
+tladata = "tladata.cli:main_discover"
 
 [tool.setuptools]
 packages = ["tladata", "tladata.contracts", "tladata.discovery", "tladata.utils"]
