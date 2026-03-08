@@ -22,9 +22,15 @@ jobs:
     name: Black Formatting
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@24.1.1
+      - uses: actions/setup-python@v4
         with:
-          src: './src'
+          python-version: '3.12'
+      - run: pip install black[colorama]==24.1.1
+      - run: black src/
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'style: apply black formatting'
+          file_pattern: 'src/**/*.py'
 
   mypy-type-check:
     runs-on: ubuntu-latest
