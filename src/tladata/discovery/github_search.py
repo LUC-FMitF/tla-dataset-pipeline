@@ -31,5 +31,5 @@ def fetch_repo_metadata(client: GithubClient, full_name: str, source: str) -> di
         "sha": sha,
         "license_spdx": repo["license"]["spdx_id"] if repo["license"] else None,
         "discovered_at": datetime.now(timezone.utc).isoformat(),
-        "query_hit": source,
+        "query_hits": [source],
     }

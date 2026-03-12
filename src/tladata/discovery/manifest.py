@@ -1,5 +1,7 @@
 import json
+import subprocess
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any
 
 
@@ -12,6 +14,20 @@ def merge_records(existing: dict[str, Any], new: dict[str, Any]) -> dict[str, An
 
 
 def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
+    """Write JSONL file and create a pretty-printed version."""
     with open(path, "w") as f:
         for r in records:
-            f.write(json.dumps(r) + "\n")
+            f.write(json.dumps(r, sort_keys=True) + "\n")
+
+    # Create pretty-printed version for human readability
+    formatted_path = Path(path).with_stem(Path(path).stem + "_formatted")
+    try:
+        subprocess.run(
+            f"jq '.' {path} > {formatted_path}",
+            shell=True,
+            check=True,
+            capture_output=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # jq not available, skip pretty-printing
+        pass

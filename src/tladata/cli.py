@@ -74,9 +74,6 @@ def fetch_seeds(args: argparse.Namespace) -> int:
         return 1
 
 
-# Standalone validation command
-
-
 def validate_manifest(args: argparse.Namespace) -> int:
     """Validate a JSONL manifest file against a JSON schema."""
     # Convert to absolute paths if relative
