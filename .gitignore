@@ -141,6 +141,10 @@ mnesia/
 rabbitmq/
 rabbitmq-data/
 
+# Data directories (tracked by DVC)
+data/
+metrics/
+
 # ActiveMQ
 activemq-data/
 

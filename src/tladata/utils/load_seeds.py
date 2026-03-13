@@ -1,3 +1,5 @@
+from typing import cast
+
 import yaml
 
 
@@ -19,5 +21,5 @@ def load_queries() -> list[str]:
         if isinstance(data, list):
             return data
         elif isinstance(data, dict):
-            return data.get("queries", [])
+            return cast(list[str], data.get("queries", []))
         return []

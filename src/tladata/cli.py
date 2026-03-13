@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import cast
 
 from tladata import __version__
 from tladata.contracts.validate import validate_jsonl
@@ -14,6 +15,9 @@ from tladata.discovery.pipeline import (
     SearchService,
     SeedFetcher,
 )
+from tladata.extraction.file_extractor import FileExtractor
+from tladata.extraction.s3_uploader import S3Uploader
+from tladata.utils.load_limits import load_limits
 
 
 def get_github_client() -> GithubClient:
@@ -94,17 +98,73 @@ def validate_manifest(args: argparse.Namespace) -> int:
         print("Validation passed!")
         return 0
     else:
+        limits = load_limits()
+        max_errors_display = limits.get("validation", "max_validation_errors", 50)
+
         print(f"Validation failed with {len(errors)} error(s):\n")
-        if args.verbose or len(errors) <= 10:
+        if args.verbose or len(errors) <= max_errors_display:
             for error in errors:
                 print(f"  {error}")
         else:
-            # Show first 10 errors and summary
-            for error in errors[:10]:
+            # Show first N errors and summary
+            for error in errors[:max_errors_display]:
                 print(f"  {error}")
-            print(f"\n  ... and {len(errors) - 10} more errors")
+            print(f"\n  ... and {len(errors) - max_errors_display} more errors")
             print("\nRun with -v/--verbose to see all errors")
 
+        return 1
+
+
+# Extraction subcommands
+
+
+def pull(args: argparse.Namespace) -> int:
+    """Extract .tla, .cfg, and .tlaps files from discovered repositories."""
+    try:
+        client = get_github_client()
+        extractor = FileExtractor(client)
+        extractor.extract_files(args.manifest, args.output)
+        print(f"\nFiles extracted to: {args.output}")
+        return 0
+    except Exception as e:
+        print(f"Error during extraction: {e}", file=sys.stderr)
+        return 1
+
+
+def push_to_s3(args: argparse.Namespace) -> int:
+    """Push extracted files to AWS S3."""
+    try:
+        # Try to get S3 config from DVC config
+        dvc_config_path = Path(".dvc/config")
+        s3_config = None
+
+        if dvc_config_path.exists():
+            s3_config = S3Uploader.get_s3_config_from_dvc(str(dvc_config_path))
+
+        bucket = args.bucket or (s3_config.get("bucket") if s3_config else None)
+        prefix = args.prefix or (s3_config.get("prefix") if s3_config else "raw")
+        region = args.region or (s3_config.get("region") if s3_config else "us-east-2")
+
+        if not bucket:
+            raise ValueError(
+                "Bucket not specified. Use --bucket or configure in .dvc/config"
+            )
+
+        uploader = S3Uploader(cast(str, bucket), cast(str, prefix), cast(str, region))
+        stats = uploader.upload_directory(args.input, dry_run=args.dry_run)
+
+        print("\nUpload Statistics:")
+        print(f"  Total files: {stats['total_files']}")
+        print(f"  Uploaded: {stats['uploaded_files']}")
+        print(f"  Skipped: {stats['skipped_files']}")
+        if stats["errors"]:
+            print(f"  Errors: {len(stats['errors'])}")
+            for error in stats["errors"][:5]:
+                print(f"    - {error}")
+
+        return 0
+    except Exception as e:
+        print(f"Error during S3 upload: {e}", file=sys.stderr)
         return 1
 
 
@@ -163,6 +223,50 @@ def main_discover() -> int:
         help="Fetch metadata for seeded repositories only",
     )
 
+    # pull
+    pull_parser = subparsers.add_parser(
+        "pull",
+        help="Extract .tla, .cfg, and .tlaps files from discovered repositories",
+    )
+    pull_parser.add_argument(
+        "--manifest",
+        default="manifests/sources/sources_latest.jsonl",
+        help="Path to manifest file (default: manifests/sources/sources_latest.jsonl)",
+    )
+    pull_parser.add_argument(
+        "--output",
+        default="data/raw",
+        help="Output directory for extracted files (default: data/raw)",
+    )
+
+    # push-to-s3
+    push_parser = subparsers.add_parser(
+        "push-to-s3",
+        help="Push extracted files to AWS S3 storage",
+    )
+    push_parser.add_argument(
+        "--input",
+        default="data/raw",
+        help="Input directory with files to push (default: data/raw)",
+    )
+    push_parser.add_argument(
+        "--bucket",
+        help="S3 bucket name (uses .dvc/config if not specified)",
+    )
+    push_parser.add_argument(
+        "--prefix",
+        help="S3 prefix/folder (default: raw)",
+    )
+    push_parser.add_argument(
+        "--region",
+        help="AWS region (default: us-east-2)",
+    )
+    push_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be uploaded without actually uploading",
+    )
+
     args = parser.parse_args()
 
     # Default to discover if no command specified
@@ -177,6 +281,10 @@ def main_discover() -> int:
         return validate(args)
     elif args.command == "fetch-seeds":
         return fetch_seeds(args)
+    elif args.command == "pull":
+        return pull(args)
+    elif args.command == "push-to-s3":
+        return push_to_s3(args)
     else:
         parser.print_help()
         return 1
