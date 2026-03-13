@@ -20,15 +20,22 @@ class GithubClient:
         self.max_retries = limits.get("github_api", "max_retries", 3)
         self.retry_delay = limits.get("github_api", "retry_delay", 1)
 
-    def get(self, path: str, params: Optional[dict[str, Any]] = None) -> dict[str, Any]:
-        """Get from GitHub API with retry logic and timeouts."""
+    def get(self, path: str, params: Optional[dict[str, Any]] = None, timeout: Optional[int] = None) -> dict[str, Any]:
+        """Get from GitHub API with retry logic and timeouts.
+
+        Args:
+            path: API endpoint path
+            params: Query parameters
+            timeout: Custom timeout in seconds (uses default if not specified)
+        """
         url = f"{self.base_url}{path}"
+        request_timeout = timeout if timeout is not None else self.request_timeout
 
         last_error = None
         for attempt in range(self.max_retries):
             try:
                 resp = requests.get(
-                    url, headers=self.headers, params=params, timeout=self.request_timeout
+                    url, headers=self.headers, params=params, timeout=request_timeout
                 )
                 resp.raise_for_status()
                 return cast(dict[str, Any], resp.json())
