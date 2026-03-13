@@ -15,6 +15,9 @@ def merge_records(existing: dict[str, Any], new: dict[str, Any]) -> dict[str, An
 
 def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
     """Write JSONL file and create a pretty-printed version."""
+    # Create parent directories if they don't exist
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+
     with open(path, "w") as f:
         for r in records:
             f.write(json.dumps(r, sort_keys=True) + "\n")
