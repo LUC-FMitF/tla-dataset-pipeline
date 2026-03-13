@@ -59,9 +59,11 @@ class DiscoveryPipeline:
             repos = search_repositories(self.client, query)
 
             # Limit results per query
-            repos_to_process = repos[:self.max_results_per_query]
+            repos_to_process = repos[: self.max_results_per_query]
             if len(repos) > self.max_results_per_query:
-                print(f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})")
+                print(
+                    f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})"
+                )
 
             for repo_dict in repos_to_process:
                 if len(discovered) >= self.max_repositories:
@@ -108,9 +110,11 @@ class SearchService:
             repos = search_repositories(self.client, query)
 
             # Limit results per query
-            repos_to_process = repos[:self.max_results_per_query]
+            repos_to_process = repos[: self.max_results_per_query]
             if len(repos) > self.max_results_per_query:
-                print(f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})")
+                print(
+                    f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})"
+                )
 
             for repo_dict in repos_to_process:
                 if len(discovered) >= self.max_repositories:

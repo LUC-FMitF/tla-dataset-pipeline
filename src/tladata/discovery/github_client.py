@@ -28,17 +28,14 @@ class GithubClient:
         for attempt in range(self.max_retries):
             try:
                 resp = requests.get(
-                    url,
-                    headers=self.headers,
-                    params=params,
-                    timeout=self.request_timeout
+                    url, headers=self.headers, params=params, timeout=self.request_timeout
                 )
                 resp.raise_for_status()
                 return cast(dict[str, Any], resp.json())
             except requests.exceptions.RequestException as e:
                 last_error = e
                 if attempt < self.max_retries - 1:
-                    wait_time = self.retry_delay * (2 ** attempt)  # exponential backoff
+                    wait_time = self.retry_delay * (2**attempt)  # exponential backoff
                     print(f"Retry attempt {attempt + 1}/{self.max_retries} after {wait_time}s...")
                     time.sleep(wait_time)
 

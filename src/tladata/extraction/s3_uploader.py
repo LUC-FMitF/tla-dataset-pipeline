@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 try:
     import boto3  # type: ignore[import-untyped]
+
     HAS_BOTO3 = True
 except ImportError:
     HAS_BOTO3 = False
@@ -45,7 +46,12 @@ class S3Uploader:
         if not local_path.is_dir():
             raise ValueError(f"Directory not found: {local_dir}")
 
-        stats: dict[str, Any] = {"total_files": 0, "uploaded_files": 0, "skipped_files": 0, "errors": []}
+        stats: dict[str, Any] = {
+            "total_files": 0,
+            "uploaded_files": 0,
+            "skipped_files": 0,
+            "errors": [],
+        }
 
         for file_path in local_path.rglob("*"):
             if file_path.is_file():
@@ -107,7 +113,9 @@ class S3Uploader:
         config = configparser.ConfigParser()
         config.read(dvc_config_path)
 
-        if "remote" in config and "s3remote" in [s.split('"')[1] for s in config.sections() if s.startswith("'remote")]:
+        if "remote" in config and "s3remote" in [
+            s.split('"')[1] for s in config.sections() if s.startswith("'remote")
+        ]:
             # Try alternate pattern
             for section in config.sections():
                 if "remote" in section and "s3remote" in section:

@@ -79,16 +79,15 @@ class FileExtractor:
         url = f"https://raw.githubusercontent.com/{repo}/{sha}/{file_path}"
 
         try:
-            response = requests.get(
-                url,
-                timeout=self.file_download_timeout
-            )
+            response = requests.get(url, timeout=self.file_download_timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to download {file_path}: {response.status_code}")
 
             # Check file size limit
             if len(response.content) > self.max_file_size:
-                print(f"  Skipped {file_path}: exceeds size limit ({len(response.content)} > {self.max_file_size})")
+                print(
+                    f"  Skipped {file_path}: exceeds size limit ({len(response.content)} > {self.max_file_size})"
+                )
                 return
 
             dest_file = dest_dir / file_path
@@ -100,4 +99,3 @@ class FileExtractor:
             print(f"  Skipped {file_path}: download timeout (>{self.file_download_timeout}s)")
         except Exception as e:
             print(f"  Error downloading {file_path}: {e}")
-
