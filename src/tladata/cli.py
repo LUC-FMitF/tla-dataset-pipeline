@@ -142,12 +142,17 @@ def push_to_s3(args: argparse.Namespace) -> int:
         if dvc_config_path.exists():
             s3_config = S3Uploader.get_s3_config_from_dvc(str(dvc_config_path))
 
-        bucket = args.bucket or (s3_config.get("bucket") if s3_config else None)
+        # Try multiple sources for bucket: args, DVC config, environment variable
+        bucket = (
+            args.bucket
+            or (s3_config.get("bucket") if s3_config else None)
+            or os.environ.get("S3_BUCKET")
+        )
         prefix = args.prefix or (s3_config.get("prefix") if s3_config else "raw")
         region = args.region or (s3_config.get("region") if s3_config else "us-east-2")
 
         if not bucket:
-            raise ValueError("Bucket not specified. Use --bucket or configure in .dvc/config")
+            raise ValueError("Bucket not specified. Use --bucket, S3_BUCKET env var, or configure in .dvc/config")
 
         uploader = S3Uploader(cast(str, bucket), cast(str, prefix), cast(str, region))
         stats = uploader.upload_directory(args.input, dry_run=args.dry_run)
