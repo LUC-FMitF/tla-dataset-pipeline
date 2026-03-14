@@ -152,7 +152,9 @@ def push_to_s3(args: argparse.Namespace) -> int:
         region = args.region or (s3_config.get("region") if s3_config else "us-east-2")
 
         if not bucket:
-            raise ValueError("Bucket not specified. Use --bucket, S3_BUCKET env var, or configure in .dvc/config")
+            raise ValueError(
+                "Bucket not specified. Use --bucket, S3_BUCKET env var, or configure in .dvc/config"
+            )
 
         uploader = S3Uploader(cast(str, bucket), cast(str, prefix), cast(str, region))
         stats = uploader.upload_directory(args.input, dry_run=args.dry_run)

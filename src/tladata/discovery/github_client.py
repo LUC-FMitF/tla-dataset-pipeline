@@ -20,7 +20,9 @@ class GithubClient:
         self.max_retries = limits.get("github_api", "max_retries", 3)
         self.retry_delay = limits.get("github_api", "retry_delay", 1)
 
-    def get(self, path: str, params: Optional[dict[str, Any]] = None, timeout: Optional[int] = None) -> dict[str, Any]:
+    def get(
+        self, path: str, params: Optional[dict[str, Any]] = None, timeout: Optional[int] = None
+    ) -> dict[str, Any]:
         """Get from GitHub API with retry logic and timeouts.
 
         Args:

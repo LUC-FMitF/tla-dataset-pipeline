@@ -54,14 +54,18 @@ class FileExtractor:
                 files_before = self._count_files(output_path)
                 self._extract_from_repo(repo, sha, output_path)
                 files_after = self._count_files(output_path)
-                total_files += (files_after - files_before)
-                print(f"[{repos_processed}] Completed {repo} (extracted {files_after - files_before} files)")
+                total_files += files_after - files_before
+                print(
+                    f"[{repos_processed}] Completed {repo} (extracted {files_after - files_before} files)"
+                )
 
-        print(f"\n Extraction complete: {total_files} files extracted from {repos_processed} repositories")
+        print(
+            f"\n Extraction complete: {total_files} files extracted from {repos_processed} repositories"
+        )
 
     def _count_files(self, path: Path) -> int:
         """Count total files in directory tree."""
-        return sum(1 for _ in path.rglob('*') if _.is_file())
+        return sum(1 for _ in path.rglob("*") if _.is_file())
 
     def _extract_from_repo(self, repo: str, sha: str, output_base: Path) -> None:
         """Extract TLA files from a single repository."""
