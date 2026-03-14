@@ -23,6 +23,8 @@ jobs:
   black-format:
     runs-on: ubuntu-latest
     name: Black Formatting
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4.1.7
       - uses: actions/setup-python@v5
