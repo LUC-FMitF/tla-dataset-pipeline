@@ -18,7 +18,7 @@ stages:
       - data/raw
 
   push-to-s3:
-    cmd: tladata push-to-s3 --bucket luc-tla-dataset --prefix raw --manifest-prefix manifests/sources
+    cmd: tladata push-to-s3 --bucket luc-tla-datasets --prefix raw --manifest-prefix manifests/sources
     deps:
       - data/raw
       - manifests/sources/sources_latest.jsonl
