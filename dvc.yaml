@@ -21,3 +21,5 @@ stages:
     cmd: tladata push-to-s3
     deps:
       - data/raw
+      - manifests/sources/sources_latest.jsonl
+      - manifests/sources/sources_latest_formatted.jsonl

@@ -157,7 +157,20 @@ def push_to_s3(args: argparse.Namespace) -> int:
             )
 
         uploader = S3Uploader(cast(str, bucket), cast(str, prefix), cast(str, region))
+
+        # Upload extracted files from data/raw
         stats = uploader.upload_directory(args.input, dry_run=args.dry_run)
+
+        # Also upload manifest files
+        manifest_dir = Path("manifests/sources")
+        if manifest_dir.exists():
+            print("\nUploading manifests...")
+            manifest_stats = uploader.upload_directory(str(manifest_dir), dry_run=args.dry_run)
+            # Combine statistics
+            stats["total_files"] += manifest_stats["total_files"]
+            stats["uploaded_files"] += manifest_stats["uploaded_files"]
+            stats["skipped_files"] += manifest_stats["skipped_files"]
+            stats["errors"].extend(manifest_stats["errors"])
 
         print("\nUpload Statistics:")
         print(f"  Total files: {stats['total_files']}")
