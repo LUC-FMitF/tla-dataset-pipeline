@@ -57,14 +57,9 @@ jobs:
           
           # Verify credentials are valid using AWS CLI
           if aws sts get-caller-identity --region us-east-2 > /tmp/aws_identity.json 2>&1; then
-            ACCOUNT=$(jq -r '.Account' /tmp/aws_identity.json)
-            ARN=$(jq -r '.Arn' /tmp/aws_identity.json)
             echo "AWS credentials valid"
-            echo "  Account: $ACCOUNT"
-            echo "  ARN: $ARN"
           else
             echo "AWS credentials invalid or expired"
-            cat /tmp/aws_identity.json
             exit 1
           fi
 
