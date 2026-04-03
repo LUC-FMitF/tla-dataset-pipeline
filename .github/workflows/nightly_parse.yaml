@@ -1,0 +1,138 @@
+name: Nightly TLA+ Parse and Transform
+
+on:
+  # Run after the Nightly Data Pipeline (discovery) completes
+  workflow_run:
+    workflows: ["Nightly Data Pipeline"]
+    types: [completed]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  transform:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check nightly discovery workflow status
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "ERROR: Nightly Data Pipeline did not complete successfully"
+            echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+            exit 1
+          fi
+          echo "Nightly Data Pipeline completed successfully"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[s3]"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Sync extracted files from S3
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+        run: |
+          echo "Syncing extracted files from S3..."
+          # Ensure data directories exist
+          mkdir -p data/raw manifests/extraction
+          # Sync extracted files (required)
+          if ! aws s3 sync s3://$S3_BUCKET/raw data/raw --region us-east-2; then
+            echo "ERROR: Failed to sync raw files from S3"
+            exit 1
+          fi
+          # Sync extraction manifest if available (optional)
+          aws s3 sync s3://$S3_BUCKET/manifests/extraction manifests/extraction --region us-east-2 || echo "No extraction manifest in S3"
+
+      - name: Validate raw files exist
+        run: |
+          FILE_COUNT=$(find data/raw -type f | wc -l)
+          if [ $FILE_COUNT -eq 0 ]; then
+            echo "ERROR: No files found in data/raw"
+            exit 1
+          fi
+          echo "Found $FILE_COUNT files in data/raw"
+
+      - name: Generate extraction manifest (if missing)
+        run: |
+          if [ ! -f manifests/extraction/extraction_manifest.jsonl ]; then
+            echo "Generating extraction manifest from extracted files..."
+            dvc repro generate-extraction-manifest
+          else
+            echo "Extraction manifest found, skipping generation"
+          fi
+
+      - name: Validate extraction manifest exists
+        run: |
+          if [ ! -f manifests/extraction/extraction_manifest.jsonl ]; then
+            echo "ERROR: Extraction manifest not found and could not be generated"
+            exit 1
+          fi
+          echo "Extraction manifest ready"
+
+      - name: Run DVC transformation pipeline
+        run: |
+          echo "Running DVC transform stage..."
+          dvc repro transform
+
+      - name: Validate processed files exist
+        run: |
+          if [ ! -f data/processed/tla-components-fine.json ] || [ ! -f data/processed/tla-components-coarse.json ]; then
+            echo "ERROR: Processed output files not found"
+            ls -la data/processed/ || echo "data/processed directory not found"
+            exit 1
+          fi
+          if [ ! -d data/processed/json ]; then
+            echo "ERROR: Individual spec directory not found"
+            exit 1
+          fi
+          echo "Processed files validated"
+          echo "Individual specs: $(find data/processed/json -name 'data.json' | wc -l) files"
+
+      - name: Track processed data with DVC
+        run: |
+          echo "Tracking DVC outputs..."
+          git add data/processed/*.dvc
+          git status
+
+      - name: Push DVC-tracked data to S3
+        run: |
+          echo "Pushing DVC outputs to S3..."
+          dvc push
+
+      - name: Commit DVC metadata to repository
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Commit DVC metadata
+          git commit -m "chore: update TLA+ dataset from nightly parse" || echo "No changes to commit"
+          
+          # Push to repository
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD) || true
+
+      - name: Handle transform errors
+        if: failure()
+        run: |
+          echo "Transform pipeline failed. Collecting diagnostic information..."
+          echo "\n=== Data directories ==="
+          ls -lah data/ manifests/ 2>/dev/null || echo "Data directories not found"
+          echo "\n=== Checking for extraction manifest ==="
+          ls -lah manifests/extraction/ 2>/dev/null || echo "No extraction manifest"
+          echo "\n=== Raw file count ==="
+          find data/raw -type f | wc -l || echo "No raw files"

@@ -23,3 +23,22 @@ stages:
       - data/raw
       - manifests/sources/sources_latest.jsonl
       - manifests/sources/sources_latest_formatted.jsonl
+
+  generate-extraction-manifest:
+    cmd: tladata generate-manifest --input data/raw --output manifests/extraction/extraction_manifest.jsonl
+    deps:
+      - data/raw
+      - src/tladata/discovery
+    outs:
+      - manifests/extraction/extraction_manifest.jsonl
+
+  transform:
+    cmd: tladata transform --extraction-manifest manifests/extraction/extraction_manifest.jsonl --extracted-files-root data/raw --output-fine data/processed/tla-components-fine.json --output-coarse data/processed/tla-components-coarse.json --output-individual-dir data/processed/json
+    deps:
+      - data/raw
+      - manifests/extraction/extraction_manifest.jsonl
+      - src/tladata/transform
+    outs:
+      - data/processed/tla-components-fine.json
+      - data/processed/tla-components-coarse.json
+      - data/processed/json

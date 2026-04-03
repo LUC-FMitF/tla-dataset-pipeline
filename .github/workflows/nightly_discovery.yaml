@@ -108,7 +108,7 @@ jobs:
         if: success()
         run: |
           echo "Pipeline execution completed successfully!"
-          echo "Stages run: discover → pull → push-to-s3"
+          echo "Stages run: discover -> pull -> push-to-s3"
           echo "Manifest: manifests/sources/sources_latest.jsonl"
           echo "Extracted files: data/raw/"
           echo "S3 bucket: luc-tla-datasets"

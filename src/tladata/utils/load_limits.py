@@ -1,7 +1,7 @@
 """Load runtime configuration limits from limits.yaml."""
 
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import yaml
 
@@ -9,8 +9,8 @@ import yaml
 class LimitsConfig:
     """Configuration manager for runtime limits."""
 
-    _instance: Optional["LimitsConfig"] = None
-    _config: Optional[dict[str, Any]] = None
+    _instance: "LimitsConfig" | None = None
+    _config: dict[str, Any] | None = None
 
     def __new__(cls) -> "LimitsConfig":
         """Singleton pattern to ensure only one config is loaded."""
@@ -43,7 +43,7 @@ class LimitsConfig:
         section_config = self._config.get(section, {})
         return section_config.get(key, default)
 
-    def get_section(self, section: str, default: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def get_section(self, section: str, default: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Get entire configuration section.
 

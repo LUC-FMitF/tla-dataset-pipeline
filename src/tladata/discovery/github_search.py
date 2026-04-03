@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timezone
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from tladata.discovery.github_client import GithubClient
 from tladata.utils.load_limits import load_limits
@@ -9,7 +9,7 @@ from tladata.utils.load_limits import load_limits
 
 
 def search_repositories(
-    client: GithubClient, query: str, per_page: Optional[int] = None
+    client: GithubClient, query: str, per_page: int | None = None
 ) -> list[dict[str, Any]]:
     """Search GitHub repositories with configured limits."""
     limits = load_limits()

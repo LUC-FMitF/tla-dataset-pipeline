@@ -1,5 +1,5 @@
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import requests
 
@@ -21,7 +21,7 @@ class GithubClient:
         self.retry_delay = limits.get("github_api", "retry_delay", 1)
 
     def get(
-        self, path: str, params: Optional[dict[str, Any]] = None, timeout: Optional[int] = None
+        self, path: str, params: dict[str, Any] | None = None, timeout: int | None = None
     ) -> dict[str, Any]:
         """Get from GitHub API with retry logic and timeouts.
 

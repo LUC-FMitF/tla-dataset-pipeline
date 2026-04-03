@@ -1,10 +1,10 @@
 """Upload files to AWS S3."""
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
-    import boto3  # type: ignore[import-untyped]
+    import boto3  # type: ignore[import-not-found, import-untyped]
 
     HAS_BOTO3 = True
 except ImportError:
@@ -101,7 +101,7 @@ class S3Uploader:
             self.s3_client.upload_file(local_file, self.bucket, full_key)
 
     @staticmethod
-    def get_s3_config_from_dvc(dvc_config_path: str) -> Optional[dict]:
+    def get_s3_config_from_dvc(dvc_config_path: str) -> dict | None:
         """
         Parse S3 configuration from .dvc/config file.
 
