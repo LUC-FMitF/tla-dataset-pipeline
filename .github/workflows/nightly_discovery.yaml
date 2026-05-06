@@ -26,7 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[s3]"
-          pip install dvc
+          pip install dvc[s3]
 
       - name: Configure DVC
         env:
@@ -95,7 +95,6 @@ jobs:
         run: |
           echo "Pushing outputs to S3..."
           dvc push --verbose
-        continue-on-error: true
 
       - name: Commit DVC state to repository
         run: |
