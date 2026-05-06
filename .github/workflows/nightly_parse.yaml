@@ -6,11 +6,13 @@ on:
     workflows: ["Nightly Data Pipeline"]
     types: [completed]
   workflow_dispatch:  # Allow manual trigger
+
 env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  S3_BUCKET: ${{ vars.S3_BUCKET }}
+
 jobs:
   transform:
     runs-on: ubuntu-latest
@@ -41,6 +43,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[s3]" dvc
 
+      - name: Configure DVC
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+        run: |
+          cat > .dvc/config.local << EOF
+          [core]
+              remote = s3remote
+          ['remote "s3remote"']
+              url = s3://${S3_BUCKET}/dvc/
+              region = us-east-2
+          EOF
+          echo "DVC config.local created:"
+          cat .dvc/config.local
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -48,29 +64,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Sync extracted files from S3
-        env:
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
+      - name: Pull DVC-tracked outputs
         run: |
-          echo "Syncing extracted files from S3..."
-          # Ensure data directories exist
-          mkdir -p data/raw manifests/extraction
-          # Sync extracted files (required)
-          if ! aws s3 sync s3://$S3_BUCKET/raw data/raw --region us-east-2; then
-            echo "ERROR: Failed to sync raw files from S3"
-            exit 1
-          fi
-          # Sync extraction manifest if available (optional)
-          aws s3 sync s3://$S3_BUCKET/manifests/extraction manifests/extraction --region us-east-2 || echo "No extraction manifest in S3"
+          echo "Pulling extracted files and manifests from S3..."
+          dvc pull --verbose
+        continue-on-error: false
 
-      - name: Validate raw files exist
+      - name: Validate pulled files exist
         run: |
-          FILE_COUNT=$(find data/raw -type f | wc -l)
-          if [ $FILE_COUNT -eq 0 ]; then
-            echo "ERROR: No files found in data/raw"
+          if [ ! -d data/raw ] || [ -z "$(find data/raw -type f 2>/dev/null)" ]; then
+            echo "ERROR: No files found in data/raw after dvc pull"
             exit 1
           fi
-          echo "Found $FILE_COUNT files in data/raw"
+          FILE_COUNT=$(find data/raw -type f | wc -l)
+          echo "Successfully pulled $FILE_COUNT files from S3"
 
       - name: Generate extraction manifest (if missing)
         run: |

@@ -85,7 +85,29 @@ jobs:
         run: |
           echo "Starting DVC pipeline..."
           set -x  # Enable debug output
-          dvc repro discover pull push-to-s3 --verbose
+          dvc repro discover pull --verbose
+        continue-on-error: true
+
+      - name: Push outputs to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "Pushing outputs to S3..."
+          dvc push --verbose
+        continue-on-error: true
+
+      - name: Commit DVC state to repository
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Add and commit dvc.lock and DVC metadata
+          git add dvc.lock
+          git commit -m "chore: update DVC state after discovery pipeline" || echo "No changes to commit"
+          
+          # Push to repository
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD) || true
         continue-on-error: true
 
       - name: Check pipeline status
@@ -108,7 +130,8 @@ jobs:
         if: success()
         run: |
           echo "Pipeline execution completed successfully!"
-          echo "Stages run: discover -> pull -> push-to-s3"
+          echo "Stages run: discover -> pull"
+          echo "Outputs pushed to S3 remote"
           echo "Manifest: manifests/sources/sources_latest.jsonl"
           echo "Extracted files: data/raw/"
           echo "S3 bucket: luc-tla-datasets"
