@@ -85,7 +85,7 @@ jobs:
         run: |
           echo "Starting DVC pipeline..."
           set -x  # Enable debug output
-          dvc repro --verbose
+          dvc repro discover pull push-to-s3 --verbose
         continue-on-error: true
 
       - name: Check pipeline status
