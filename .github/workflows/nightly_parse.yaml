@@ -1,12 +1,12 @@
 name: Nightly TLA+ Parse and Transform
 
 on:
-  # Run after the Nightly Data Pipeline (discovery) completes
+  # Run after the Nightly Data Pipeline (discovery) completes on main
   workflow_run:
     workflows: ["Nightly Data Pipeline"]
     types: [completed]
+    branches: [main]
   workflow_dispatch:  # Allow manual trigger
-  workflow_call:  # Allow being called by other workflows (e.g., discovery)
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -16,6 +16,7 @@ env:
 
 jobs:
   transform:
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write

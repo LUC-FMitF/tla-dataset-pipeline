@@ -8,10 +8,10 @@ on:
 
 jobs:
   pipeline:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write
       
     steps:
       - name: Checkout repository
@@ -43,40 +43,6 @@ jobs:
           echo "DVC config.local created:"
           cat .dvc/config.local
 
-      - name: Verify AWS credentials
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          echo "Checking AWS credentials..."
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "ERROR: AWS credentials not set in GitHub secrets"
-            echo "Required secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
-            exit 1
-          fi
-          echo "AWS credentials are set"
-          
-          # Verify credentials are valid using AWS CLI
-          if aws sts get-caller-identity --region us-east-2 > /tmp/aws_identity.json 2>&1; then
-            echo "AWS credentials valid"
-          else
-            echo "AWS credentials invalid or expired"
-            exit 1
-          fi
-
-      - name: Verify S3 bucket access
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          echo "Checking S3 bucket access..."
-          if aws s3 ls s3://luc-tla-datasets --region us-east-2 > /dev/null 2>&1; then
-            echo "AWS S3 bucket is accessible"
-          else
-            echo "Cannot access S3 bucket"
-            exit 1
-          fi
-
       - name: Run DVC pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,8 +73,7 @@ jobs:
           git commit -m "chore: update DVC state after discovery pipeline" || echo "No changes to commit"
           
           # Push to repository
-          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD) || true
-        continue-on-error: true
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
 
       - name: Check pipeline status
         if: failure()
@@ -134,16 +99,4 @@ jobs:
           echo "Outputs pushed to S3 remote"
           echo "Manifest: manifests/sources/sources_latest.jsonl"
           echo "Extracted files: data/raw/"
-          echo "S3 bucket: luc-tla-datasets"
-
-      - name: Trigger nightly parse workflow
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'nightly_parse.yaml',
-              ref: context.ref
-            })
+          echo "S3 bucket: ${{ vars.S3_BUCKET }}"
