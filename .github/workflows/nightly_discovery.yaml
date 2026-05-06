@@ -42,22 +42,35 @@ jobs:
           echo "DVC config.local created:"
           cat .dvc/config.local
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
       - name: Run DVC pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_BUCKET: ${{ vars.S3_BUCKET }}
         run: |
-          echo "Starting DVC pipeline..."
+          echo "Starting DVC discovery and pull stages..."
           set -x  # Enable debug output
           dvc repro discover pull --verbose
-        continue-on-error: true
+
+      - name: Validate discovery outputs
+        run: |
+          if [ ! -f manifests/sources/sources_latest.jsonl ]; then
+            echo "ERROR: Discovery manifest not found"
+            exit 1
+          fi
+          if [ ! -d data/raw ] || [ -z "$(find data/raw -type f 2>/dev/null)" ]; then
+            echo "ERROR: No extracted files found in data/raw"
+            exit 1
+          fi
+          echo "Discovery outputs validated"
 
       - name: Push outputs to S3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           echo "Pushing outputs to S3..."
           dvc push --verbose
@@ -73,6 +86,9 @@ jobs:
           
           # Push to repository
           git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
+          
+          # Wait for git push to propagate before parse workflow checks it out
+          sleep 5
 
       - name: Check pipeline status
         if: failure()
