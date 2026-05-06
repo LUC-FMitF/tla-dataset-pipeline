@@ -26,7 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[s3]"
-          pip install dvc
+          pip install dvc[s3]
 
       - name: Configure DVC
         env:
@@ -42,51 +42,53 @@ jobs:
           echo "DVC config.local created:"
           cat .dvc/config.local
 
-      - name: Verify AWS credentials
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          echo "Checking AWS credentials..."
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "ERROR: AWS credentials not set in GitHub secrets"
-            echo "Required secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
-            exit 1
-          fi
-          echo "AWS credentials are set"
-          
-          # Verify credentials are valid using AWS CLI
-          if aws sts get-caller-identity --region us-east-2 > /tmp/aws_identity.json 2>&1; then
-            echo "AWS credentials valid"
-          else
-            echo "AWS credentials invalid or expired"
-            exit 1
-          fi
-
-      - name: Verify S3 bucket access
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          echo "Checking S3 bucket access..."
-          if aws s3 ls s3://luc-tla-datasets --region us-east-2 > /dev/null 2>&1; then
-            echo "AWS S3 bucket is accessible"
-          else
-            echo "Cannot access S3 bucket"
-            exit 1
-          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
 
       - name: Run DVC pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_BUCKET: ${{ vars.S3_BUCKET }}
         run: |
-          echo "Starting DVC pipeline..."
+          echo "Starting DVC discovery and pull stages..."
           set -x  # Enable debug output
-          dvc repro --verbose
-        continue-on-error: true
+          dvc repro discover pull --verbose
+
+      - name: Validate discovery outputs
+        run: |
+          if [ ! -f manifests/sources/sources_latest.jsonl ]; then
+            echo "ERROR: Discovery manifest not found"
+            exit 1
+          fi
+          if [ ! -d data/raw ] || [ -z "$(find data/raw -type f 2>/dev/null)" ]; then
+            echo "ERROR: No extracted files found in data/raw"
+            exit 1
+          fi
+          echo "Discovery outputs validated"
+
+      - name: Push outputs to S3
+        run: |
+          echo "Pushing outputs to S3..."
+          dvc push --verbose
+
+      - name: Commit DVC state to repository
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Add and commit dvc.lock and DVC metadata
+          git add dvc.lock
+          git commit -m "chore: update DVC state after discovery pipeline" || echo "No changes to commit"
+          
+          # Push to repository
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
+          
+          # Wait for git push to propagate before parse workflow checks it out
+          sleep 5
 
       - name: Check pipeline status
         if: failure()
@@ -108,7 +110,8 @@ jobs:
         if: success()
         run: |
           echo "Pipeline execution completed successfully!"
-          echo "Stages run: discover -> pull -> push-to-s3"
+          echo "Stages run: discover -> pull"
+          echo "Outputs pushed to S3 remote"
           echo "Manifest: manifests/sources/sources_latest.jsonl"
           echo "Extracted files: data/raw/"
-          echo "S3 bucket: luc-tla-datasets"
+          echo "S3 bucket: ${{ vars.S3_BUCKET }}"

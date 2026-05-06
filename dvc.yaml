@@ -17,13 +17,6 @@ stages:
     outs:
       - data/raw
 
-  push-to-s3:
-    cmd: tladata push-to-s3 --bucket luc-tla-datasets --prefix raw --manifest-prefix manifests/sources
-    deps:
-      - data/raw
-      - manifests/sources/sources_latest.jsonl
-      - manifests/sources/sources_latest_formatted.jsonl
-
   generate-extraction-manifest:
     cmd: tladata generate-manifest --input data/raw --output manifests/extraction/extraction_manifest.jsonl
     deps:
