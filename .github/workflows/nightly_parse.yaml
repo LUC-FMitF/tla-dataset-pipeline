@@ -6,6 +6,7 @@ on:
     workflows: ["Nightly Data Pipeline"]
     types: [completed]
   workflow_dispatch:  # Allow manual trigger
+  workflow_call:  # Allow being called by other workflows (e.g., discovery)
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -21,6 +22,7 @@ jobs:
 
     steps:
       - name: Check nightly discovery workflow status
+        if: github.event.workflow_run != null
         run: |
           if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
             echo "ERROR: Nightly Data Pipeline did not complete successfully"
@@ -28,6 +30,13 @@ jobs:
             exit 1
           fi
           echo "Nightly Data Pipeline completed successfully"
+
+      - name: Warn about manual run
+        if: github.event.workflow_run == null
+        run: |
+          echo "⚠️  WARNING: This is a manual workflow run"
+          echo "Please ensure the discovery pipeline has been run on this branch"
+          echo "to have accurate parsing results"
 
       - name: Checkout repository
         uses: actions/checkout@v4
