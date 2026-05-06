@@ -79,7 +79,7 @@ jobs:
       - name: Pull DVC-tracked outputs
         run: |
           echo "Pulling discovery outputs (manifests and extracted files) from S3..."
-          dvc pull data/raw manifests/sources/ --verbose
+          dvc pull data/raw manifests/sources/sources_latest.jsonl manifests/sources/sources_latest_formatted.jsonl --verbose
 
       - name: Validate pulled files exist
         run: |
