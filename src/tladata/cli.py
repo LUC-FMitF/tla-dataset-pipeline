@@ -241,6 +241,7 @@ def transform_extracted_files(args: argparse.Namespace) -> int:
             args.extracted_files_root,
             args.output_fine,
             args.output_coarse,
+            args.output_individual_dir,
         )
         return 0
     except Exception as e:
@@ -428,6 +429,11 @@ def main_discover() -> int:
         "--output-coarse",
         default="data/processed/tla-components-coarse.json",
         help="Output file for coarse-grained features (default: data/processed/tla-components-coarse.json)",
+    )
+    transform_parser.add_argument(
+        "--output-individual-dir",
+        default="",
+        help="Optional directory for individual JSON files per spec (default: none)",
     )
 
     args = parser.parse_args()
