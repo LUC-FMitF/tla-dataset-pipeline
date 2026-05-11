@@ -11,14 +11,14 @@ logger = get_logger(__name__)
 
 def merge_records(existing: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
     """Merge two repository metadata records, combining query_hits.
-    
+
     Args:
         existing: Existing repository metadata
         new: New repository metadata to merge
-        
+
     Returns:
         Merged metadata record
-        
+
     Raises:
         ValueError: If repositories don't match
     """
@@ -31,7 +31,7 @@ def merge_records(existing: dict[str, Any], new: dict[str, Any]) -> dict[str, An
 
 def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
     """Write JSONL file and create a pretty-printed version.
-    
+
     Args:
         path: Output path for JSONL file
         records: Iterable of records to write
@@ -48,10 +48,10 @@ def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
     try:
         with open(path) as f:
             data = json.load(f)
-        
+
         with open(formatted_path, "w") as f:
             json.dump(data, f, indent=2, sort_keys=True)
-        
+
         logger.debug(f"Created formatted version: {formatted_path}")
     except (OSError, IOError, json.JSONDecodeError) as e:
         logger.warning(f"Could not create formatted version: {e}")

@@ -17,14 +17,14 @@ logger = get_logger(__name__)
 
 class GithubClient:
     """Simple wrapper around the GitHub API using requests.
-    
+
     Handles authentication, provides GET request method with retry logic,
     and respects GitHub API rate limits and timeouts.
     """
 
     def __init__(self, token: str, limits: "GitHubAPILimits") -> None:
         """Initialize GitHub client.
-        
+
         Args:
             token: GitHub personal access token
             limits: GitHub API configuration limits
@@ -40,7 +40,7 @@ class GithubClient:
 
         # Create session with connection pooling and retry adapter
         self.session = requests.Session()
-        
+
         # Configure retry strategy with exponential backoff
         retry_strategy = Retry(
             total=limits.max_retries - 1,  # urllib3 Retry total excludes the initial request
@@ -48,7 +48,7 @@ class GithubClient:
             status_forcelist=[429, 500, 502, 503, 504],  # Retry on these HTTP status codes
             allowed_methods=["GET"],  # Only retry GET requests
         )
-        
+
         adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=10, pool_maxsize=10)
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
@@ -62,10 +62,10 @@ class GithubClient:
             path: API endpoint path
             params: Query parameters
             timeout: Custom timeout in seconds (uses default if not specified)
-            
+
         Returns:
             Parsed JSON response as dictionary
-            
+
         Raises:
             RuntimeError: If max retries exceeded
         """

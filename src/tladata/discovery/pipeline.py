@@ -31,7 +31,7 @@ class DiscoveryPipeline(DiscoveryService):
         limits: "DiscoveryLimits",
     ) -> None:
         """Initialize the discovery pipeline.
-        
+
         Args:
             client: GitHub API client
             output_path: Output path for discovered repositories
@@ -86,7 +86,9 @@ class DiscoveryPipeline(DiscoveryService):
 
             for repo_dict in repos_to_process:
                 if len(discovered) >= self.limits.max_repositories:
-                    self.logger.info(f"Reached max repositories limit ({self.limits.max_repositories})")
+                    self.logger.info(
+                        f"Reached max repositories limit ({self.limits.max_repositories})"
+                    )
                     break
 
                 repo_name = str(repo_dict.get("full_name", ""))
@@ -132,7 +134,9 @@ class SearchService(DiscoveryService):
 
             for repo_dict in repos_to_process:
                 if len(discovered) >= self.limits.max_repositories:
-                    self.logger.info(f"Reached max repositories limit ({self.limits.max_repositories})")
+                    self.logger.info(
+                        f"Reached max repositories limit ({self.limits.max_repositories})"
+                    )
                     break
 
                 repo_name = str(repo_dict.get("full_name", ""))
@@ -166,7 +170,7 @@ class ManifestValidator:
 
     def __init__(self, manifest_path: str, schema_path: str) -> None:
         """Initialize the manifest validator.
-        
+
         Args:
             manifest_path: Path to JSONL manifest file
             schema_path: Path to JSON schema file

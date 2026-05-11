@@ -27,7 +27,7 @@ def load_env() -> None:
 @dataclass
 class GitHubAPILimits:
     """GitHub API configuration limits.
-    
+
     Attributes:
         request_timeout: Request timeout in seconds
         per_page: Items per page in paginated requests
@@ -44,7 +44,7 @@ class GitHubAPILimits:
 @dataclass
 class DiscoveryLimits:
     """Discovery operation configuration limits.
-    
+
     Attributes:
         max_repositories: Maximum repositories to process
         max_results_per_query: Maximum results per search query
@@ -59,7 +59,7 @@ class DiscoveryLimits:
 @dataclass
 class ExtractionLimits:
     """File extraction configuration limits.
-    
+
     Attributes:
         file_download_timeout: Timeout per file download in seconds
         max_file_size: Maximum single file size in bytes
@@ -76,7 +76,7 @@ class ExtractionLimits:
 @dataclass
 class UploadLimits:
     """S3 upload configuration limits.
-    
+
     Attributes:
         batch_size: Files per upload batch
         s3_timeout: S3 operation timeout in seconds
@@ -91,7 +91,7 @@ class UploadLimits:
 @dataclass
 class ValidationLimits:
     """Validation configuration limits.
-    
+
     Attributes:
         max_validation_errors: Maximum errors to report during validation
     """
@@ -102,10 +102,10 @@ class ValidationLimits:
 @dataclass
 class LimitsConfig:
     """Complete configuration for the TLA dataset pipeline.
-    
+
     This dataclass aggregates all limit/config sections and provides
     a single point of configuration access with full type safety.
-    
+
     Attributes:
         github_api: GitHub API rate and timeout limits
         discovery: Repository discovery limits
@@ -123,31 +123,31 @@ class LimitsConfig:
     @classmethod
     def load(cls, path: str | None = None) -> "LimitsConfig":
         """Load configuration from YAML file.
-        
+
         Args:
             path: Path to limits.yaml file. Defaults to config/runtime/limits.yaml
-        
+
         Returns:
             Configured LimitsConfig instance
-            
+
         Raises:
             FileNotFoundError: If config file not found
             yaml.YAMLError: If YAML parsing fails
         """
         if path is None:
             path = "config/runtime/limits.yaml"
-        
+
         config_path = Path(path)
         with open(config_path) as f:
             data = yaml.safe_load(f) or {}
-        
+
         # Extract sections with defaults
         github_api_data = data.get("github_api", {})
         discovery_data = data.get("discovery", {})
         extraction_data = data.get("extraction", {})
         upload_data = data.get("upload", {})
         validation_data = data.get("validation", {})
-        
+
         return cls(
             github_api=GitHubAPILimits(**github_api_data),
             discovery=DiscoveryLimits(**discovery_data),

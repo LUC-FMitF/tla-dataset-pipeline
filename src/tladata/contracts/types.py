@@ -5,7 +5,7 @@ from typing import TypedDict
 
 class UploadStats(TypedDict):
     """Statistics from S3 upload operation.
-    
+
     Attributes:
         total_files: Total files processed
         uploaded_files: Number of files successfully uploaded
@@ -23,7 +23,7 @@ class UploadStats(TypedDict):
 
 class RepoMetadata(TypedDict):
     """Repository metadata discovered from GitHub API.
-    
+
     Attributes:
         repo: Full repository name (owner/repo)
         html_url: URL to the repository
@@ -45,7 +45,7 @@ class RepoMetadata(TypedDict):
 
 class RepositoryDiscovery(TypedDict):
     """Discovered repository collection keyed by repository name.
-    
+
     Maps repository full names to their metadata.
     """
 
@@ -55,7 +55,7 @@ class RepositoryDiscovery(TypedDict):
 
 class ApiParams(TypedDict, total=False):
     """GitHub API request parameters.
-    
+
     Attributes:
         q: Search query string
         sort: Sort field (stars, forks, updated)

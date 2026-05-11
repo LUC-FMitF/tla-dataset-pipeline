@@ -26,13 +26,13 @@ logger = get_logger(__name__)
 
 def get_github_client(config: LimitsConfig) -> GithubClient:
     """Get authenticated GitHub client.
-    
+
     Args:
         config: Application configuration with GitHub API limits
-        
+
     Returns:
         Authenticated GitHub client
-        
+
     Raises:
         ValueError: If GITHUB_TOKEN environment variable is not set
     """
@@ -125,10 +125,10 @@ def main_discover() -> int:
     """Main entry point for discovery commands."""
     load_env()  # Load .env file if it exists (local development only)
     configure_logging(verbose=False)  # Setup logging infrastructure
-    
+
     # Load configuration
     config = LimitsConfig.load()
-    
+
     parser = argparse.ArgumentParser(description="TLA Dataset Discovery Pipeline", prog="tladata")
 
     # Global arguments
@@ -259,10 +259,10 @@ def main_validate() -> int:
     """Main entry point for manifest validation."""
     load_env()  # Load .env file if it exists (local development only)
     configure_logging(verbose=False)  # Setup logging infrastructure
-    
+
     # Load configuration
     config = LimitsConfig.load()
-    
+
     parser = argparse.ArgumentParser(
         description="Validate a JSONL manifest file against a JSON schema"
     )

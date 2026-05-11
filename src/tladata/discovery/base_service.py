@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class DiscoveryService(ABC):
     """Abstract base class for discovery services.
-    
+
     Provides common initialization and logging for all discovery operations.
     Subclasses should implement run() to define specific discovery behavior.
     """
@@ -24,7 +24,7 @@ class DiscoveryService(ABC):
         limits: "DiscoveryLimits",
     ) -> None:
         """Initialize the discovery service.
-        
+
         Args:
             client: GitHub API client
             output_path: Path where discovered data will be written
@@ -38,7 +38,7 @@ class DiscoveryService(ABC):
     @abstractmethod
     def run(self) -> None:
         """Execute the discovery operation.
-        
+
         Subclasses must implement this to define specific discovery behavior.
         """
         pass

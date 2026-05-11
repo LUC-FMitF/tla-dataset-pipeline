@@ -18,7 +18,7 @@ class S3UploadHandler(CLIHandler):
 
     def __init__(self, config: LimitsConfig) -> None:
         """Initialize the S3 upload handler.
-        
+
         Args:
             config: Application configuration with limits
         """
@@ -36,7 +36,7 @@ class S3UploadHandler(CLIHandler):
         """
         try:
             self.logger.info("Starting S3 upload")
-            
+
             # Try to get S3 config from DVC config
             dvc_config_path = Path(".dvc/config")
             s3_config = None

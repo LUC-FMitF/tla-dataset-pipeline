@@ -24,7 +24,7 @@ class FileExtractor:
 
     def __init__(self, client: GithubClient, limits: "ExtractionLimits") -> None:
         """Initialize file extractor.
-        
+
         Args:
             client: GitHub API client
             limits: Extraction configuration limits
@@ -144,6 +144,8 @@ class FileExtractor:
             dest_file.write_text(response.text, encoding="utf-8")
             logger.debug(f"Downloaded: {file_path}")
         except requests.exceptions.Timeout:
-            logger.warning(f"Skipped {file_path}: download timeout (>{self.file_download_timeout}s)")
+            logger.warning(
+                f"Skipped {file_path}: download timeout (>{self.file_download_timeout}s)"
+            )
         except Exception as e:
             logger.error(f"Error downloading {file_path}: {e}")

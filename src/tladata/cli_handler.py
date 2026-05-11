@@ -11,11 +11,11 @@ if TYPE_CHECKING:
 
 class CLIHandler(ABC):
     """Abstract base class for CLI command handlers.
-    
+
     All CLI command handlers should inherit from this class and implement
     the handle() method. This ensures consistent error handling and exit
     code semantics across the application.
-    
+
     Exit Code Semantics:
         0: Command executed successfully
         1: Command failed (exception, validation error, etc.)
@@ -29,13 +29,13 @@ class CLIHandler(ABC):
     @abstractmethod
     def handle(self, args: "argparse.Namespace") -> int:
         """Execute the handler with parsed command-line arguments.
-        
+
         Args:
             args: Parsed command-line arguments from argparse.Namespace
-        
+
         Returns:
             Exit code: 0 for success, 1 for failure
-            
+
         Raises:
             Should NOT raise exceptions; instead catch internally and return
             appropriate exit code.

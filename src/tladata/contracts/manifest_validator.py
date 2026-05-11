@@ -16,7 +16,7 @@ class ManifestValidationHandler(CLIHandler):
 
     def __init__(self, config: LimitsConfig) -> None:
         """Initialize the manifest validation handler.
-        
+
         Args:
             config: Application configuration with limits
         """

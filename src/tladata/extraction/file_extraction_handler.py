@@ -17,7 +17,7 @@ class FileExtractionHandler(CLIHandler):
 
     def __init__(self, config: LimitsConfig, client: "GithubClient") -> None:
         """Initialize the file extraction handler.
-        
+
         Args:
             config: Application configuration with limits
             client: Authenticated GitHub client
