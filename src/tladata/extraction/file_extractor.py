@@ -3,11 +3,18 @@
 import json
 from collections.abc import Generator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import requests
 
 from tladata.discovery.github_client import GithubClient
-from tladata.utils.load_limits import load_limits
+from tladata.logging import get_logger
+
+if TYPE_CHECKING:
+    from tladata.config import ExtractionLimits
+
+
+logger = get_logger(__name__)
 
 
 class FileExtractor:
@@ -15,12 +22,17 @@ class FileExtractor:
 
     TLA_EXTENSIONS = {".tla", ".cfg", ".tlaps"}
 
-    def __init__(self, client: GithubClient):
+    def __init__(self, client: GithubClient, limits: "ExtractionLimits") -> None:
+        """Initialize file extractor.
+        
+        Args:
+            client: GitHub API client
+            limits: Extraction configuration limits
+        """
         self.client = client
-        limits = load_limits()
-        self.file_download_timeout = limits.get("extraction", "file_download_timeout", 30)
-        self.max_file_size = limits.get("extraction", "max_file_size", 10485760)  # 10 MB
-        self.max_files_per_repo = limits.get("extraction", "max_files_per_repo", 1000)
+        self.file_download_timeout = limits.file_download_timeout
+        self.max_file_size = limits.max_file_size
+        self.max_files_per_repo = limits.max_files_per_repo
 
     def extract_files(self, manifest_path: str, output_dir: str) -> None:
         """
@@ -45,22 +57,22 @@ class FileExtractor:
                 sha = record.get("sha")
 
                 if not all([repo, default_branch, sha]):
-                    print(f"Skipping {repo}: missing required fields")
+                    logger.warning(f"Skipping {repo}: missing required fields")
                     continue
 
                 total_repos += 1
                 repos_processed += 1
-                print(f"\n[{repos_processed}] Extracting files from {repo}...")
+                logger.info(f"[{repos_processed}] Extracting files from {repo}...")
                 files_before = self._count_files(output_path)
                 self._extract_from_repo(repo, sha, output_path)
                 files_after = self._count_files(output_path)
                 total_files += files_after - files_before
-                print(
+                logger.info(
                     f"[{repos_processed}] Completed {repo} (extracted {files_after - files_before} files)"
                 )
 
-        print(
-            f"\n Extraction complete: {total_files} files extracted from {repos_processed} repositories"
+        logger.info(
+            f"Extraction complete: {total_files} files extracted from {repos_processed} repositories"
         )
 
     def _count_files(self, path: Path) -> int:
@@ -76,28 +88,28 @@ class FileExtractor:
             file_count = 0
             for file_path in self._find_tla_files(repo, sha):
                 if file_count >= self.max_files_per_repo:
-                    print(f"  Reached max files limit ({self.max_files_per_repo}) for {repo}")
+                    logger.info(f"Reached max files limit ({self.max_files_per_repo}) for {repo}")
                     break
                 self._download_file(repo, sha, file_path, repo_dir)
                 file_count += 1
         except Exception as e:
-            print(f"Error extracting from {repo}: {e}")
+            logger.error(f"Error extracting from {repo}: {e}")
 
     def _find_tla_files(self, repo: str, sha: str) -> Generator[str, None, None]:
         """Find all TLA+ files in repository at given commit."""
         url = f"/repos/{repo}/git/trees/{sha}?recursive=1"
 
-        print(f"  Querying GitHub API for tree structure of {repo}@{sha[:8]}...")
+        logger.debug(f"Querying GitHub API for tree structure of {repo}@{sha[:8]}...")
         try:
             # Use longer timeout for tree queries (they can be slow for large repos)
             tree_data = self.client.get(url, timeout=60)
         except Exception as e:
-            print(f"  Failed to query tree for {repo}: {e}")
-            print(f"  Skipping {repo} (tree too large or API error)")
+            logger.error(f"Failed to query tree for {repo}: {e}")
+            logger.warning(f"Skipping {repo} (tree too large or API error)")
             return
 
         tree_items = tree_data.get("tree", [])
-        print(f"  Found {len(tree_items)} items in tree, filtering for TLA+ files...")
+        logger.debug(f"Found {len(tree_items)} items in tree, filtering for TLA+ files...")
 
         tla_count = 0
         for item in tree_items:
@@ -108,7 +120,7 @@ class FileExtractor:
                     yield path
 
         if tla_count == 0:
-            print("  No TLA+ files found")
+            logger.debug("No TLA+ files found")
 
     def _download_file(self, repo: str, sha: str, file_path: str, dest_dir: Path) -> None:
         """Download a single file from repository."""
@@ -121,8 +133,8 @@ class FileExtractor:
 
             # Check file size limit
             if len(response.content) > self.max_file_size:
-                print(
-                    f"  Skipped {file_path}: exceeds size limit ({len(response.content)} > {self.max_file_size})"
+                logger.warning(
+                    f"Skipped {file_path}: exceeds size limit ({len(response.content)} > {self.max_file_size})"
                 )
                 return
 
@@ -130,8 +142,8 @@ class FileExtractor:
             dest_file.parent.mkdir(parents=True, exist_ok=True)
 
             dest_file.write_text(response.text, encoding="utf-8")
-            print(f"  Downloaded: {file_path}")
+            logger.debug(f"Downloaded: {file_path}")
         except requests.exceptions.Timeout:
-            print(f"  Skipped {file_path}: download timeout (>{self.file_download_timeout}s)")
+            logger.warning(f"Skipped {file_path}: download timeout (>{self.file_download_timeout}s)")
         except Exception as e:
-            print(f"  Error downloading {file_path}: {e}")
+            logger.error(f"Error downloading {file_path}: {e}")

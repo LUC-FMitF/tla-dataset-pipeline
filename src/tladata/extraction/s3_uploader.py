@@ -3,6 +3,10 @@
 from pathlib import Path
 from typing import Any
 
+from tladata.logging import get_logger
+
+logger = get_logger(__name__)
+
 try:
     import boto3  # type: ignore[import-not-found, import-untyped]
 
@@ -73,9 +77,9 @@ class S3Uploader:
         s3_key = f"{self.prefix}/{relative_path}".replace("\\", "/")
 
         if dry_run:
-            print(f"[DRY RUN] Would upload: {file_path} -> s3://{self.bucket}/{s3_key}")
+            logger.info(f"[DRY RUN] Would upload: {file_path} -> s3://{self.bucket}/{s3_key}")
         else:
-            print(f"Uploading: {relative_path} ...")
+            logger.debug(f"Uploading: {relative_path} ...")
             self.s3_client.upload_file(str(file_path), self.bucket, s3_key)
             stats["uploaded_files"] += 1
 
@@ -95,9 +99,9 @@ class S3Uploader:
         full_key = f"{self.prefix}/{s3_key}".lstrip("/")
 
         if dry_run:
-            print(f"[DRY RUN] Would upload: {local_file} -> s3://{self.bucket}/{full_key}")
+            logger.info(f"[DRY RUN] Would upload: {local_file} -> s3://{self.bucket}/{full_key}")
         else:
-            print(f"Uploading: {local_file} -> s3://{self.bucket}/{full_key}")
+            logger.info(f"Uploading: {local_file} -> s3://{self.bucket}/{full_key}")
             self.s3_client.upload_file(local_file, self.bucket, full_key)
 
     @staticmethod
