@@ -4,7 +4,6 @@ import logging
 import sys
 from typing import Optional
 
-
 # Global logger instances cache
 _loggers: dict[str, logging.Logger] = {}
 
@@ -45,7 +44,7 @@ def configure_logging(verbose: bool = False, log_file: Optional[str] = None) -> 
             file_handler.setLevel(level)
             file_handler.setFormatter(detailed_formatter)
             root_logger.addHandler(file_handler)
-        except (OSError, IOError) as e:
+        except OSError as e:
             root_logger.warning(f"Could not configure file logging: {e}")
 
 

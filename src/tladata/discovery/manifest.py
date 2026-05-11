@@ -5,7 +5,6 @@ from typing import Any
 
 from tladata.logging import get_logger
 
-
 logger = get_logger(__name__)
 
 
@@ -53,5 +52,5 @@ def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
             json.dump(data, f, indent=2, sort_keys=True)
 
         logger.debug(f"Created formatted version: {formatted_path}")
-    except (OSError, IOError, json.JSONDecodeError) as e:
+    except (OSError, json.JSONDecodeError) as e:
         logger.warning(f"Could not create formatted version: {e}")

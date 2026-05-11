@@ -1,7 +1,6 @@
 """Unit tests for CLI handlers."""
 
 import argparse
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -23,24 +22,24 @@ class TestCLIHandlerBase:
 
     def test_cli_handler_requires_handle_method(self) -> None:
         """Test that CLIHandler requires handle() method."""
-        
+
         class IncompleteHandler(CLIHandler):
             """Handler without handle method."""
             pass
-        
+
         with pytest.raises(TypeError):
             IncompleteHandler()  # type: ignore[abstract]
 
     def test_cli_handler_subclass_with_handle(self) -> None:
         """Test that CLIHandler subclass can be instantiated with handle()."""
-        
+
         class TestHandler(CLIHandler):
             """Test handler with handle method."""
-            
+
             def handle(self, args: argparse.Namespace) -> int:
                 """Handle command."""
                 return 0
-        
+
         handler = TestHandler()
         result = handler.handle(argparse.Namespace())
         assert result == 0
@@ -74,9 +73,9 @@ class TestManifestValidationHandler:
             schema=temp_schema_file,
             verbose=False,
         )
-        
+
         result = handler.handle(args)
-        
+
         # Result should be an int (0 for success, 1 for failure)
         assert isinstance(result, int)
         assert result in (0, 1)
@@ -114,15 +113,15 @@ class TestFileExtractionHandler:
             from tladata.discovery.github_client import GithubClient
             client = Mock(spec=GithubClient)
             handler = FileExtractionHandler(test_config, client)
-            
+
             args = argparse.Namespace(
                 manifest=str(tmp_path / "nonexistent.jsonl"),
                 output=str(tmp_path / "output"),
             )
-            
+
             with patch.object(handler, "handle", wraps=handler.handle):
                 result = handler.handle(args)
-                
+
                 # Should return error code on missing manifest
                 assert isinstance(result, int)
                 assert result == 1
@@ -154,16 +153,16 @@ class TestS3UploadHandler:
         """Test S3UploadHandler handles missing input directory."""
         with patch("tladata.cli_handler.get_logger"):
             handler = S3UploadHandler(test_config)
-            
+
             args = argparse.Namespace(
                 input=str(tmp_path / "nonexistent"),
                 bucket="test-bucket",
                 prefix="raw",
                 dry_run=True,
             )
-            
+
             result = handler.handle(args)
-            
+
             # Should return error code on missing input
             assert isinstance(result, int)
             assert result == 1
@@ -177,18 +176,18 @@ class TestS3UploadHandler:
             input_dir = tmp_path / "input"
             input_dir.mkdir()
             (input_dir / "test.tla").write_text("---- MODULE Test ----\nPLACEHOLDER\n====")
-            
+
             handler = S3UploadHandler(test_config)
-            
+
             args = argparse.Namespace(
                 input=str(input_dir),
                 bucket="test-bucket",
                 prefix="raw",
                 dry_run=True,  # Should not actually upload
             )
-            
+
             with patch("tladata.extraction.s3_uploader.HAS_BOTO3", False):
                 result = handler.handle(args)
-                
+
                 # Should handle gracefully (may fail due to missing boto3, but that's ok)
                 assert isinstance(result, int)

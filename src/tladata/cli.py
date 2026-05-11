@@ -94,8 +94,12 @@ def fetch_seeds(args: argparse.Namespace, config: LimitsConfig) -> int:
 
 def validate_manifest(args: argparse.Namespace, config: LimitsConfig) -> int:
     """Validate a JSONL manifest file against a JSON schema."""
-    handler = ManifestValidationHandler(config)
-    return handler.handle(args)
+    try:
+        handler = ManifestValidationHandler(config)
+        return handler.handle(args)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return 1
 
 
 # Extraction subcommands

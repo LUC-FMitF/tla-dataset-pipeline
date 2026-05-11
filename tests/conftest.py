@@ -1,10 +1,10 @@
 """Pytest configuration and shared fixtures."""
 
 import json
-import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -16,9 +16,8 @@ from tladata.config import (
     UploadLimits,
     ValidationLimits,
 )
-from tladata.contracts.types import RepositoryDiscovery, RepoMetadata
+from tladata.contracts.types import RepoMetadata, RepositoryDiscovery
 from tladata.discovery.github_client import GithubClient
-
 
 # ============================================================================
 # Config Fixtures
@@ -152,12 +151,12 @@ def temp_manifest_file(
 ) -> Generator[str, None, None]:
     """Create a temporary manifest JSONL file with sample data."""
     manifest_file = tmp_path / "test_manifest.jsonl"
-    
+
     with open(manifest_file, "w") as f:
         for i in range(5):
             record = {**sample_manifest_record, "repo": f"repo-{i}"}
             f.write(json.dumps(record) + "\n")
-    
+
     yield str(manifest_file)
 
 
@@ -165,7 +164,7 @@ def temp_manifest_file(
 def temp_schema_file(tmp_path: Path) -> Generator[str, None, None]:
     """Create a temporary JSON schema file."""
     schema_file = tmp_path / "test_schema.json"
-    
+
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -179,10 +178,10 @@ def temp_schema_file(tmp_path: Path) -> Generator[str, None, None]:
         },
         "required": ["repo", "url", "sha"],
     }
-    
+
     with open(schema_file, "w") as f:
         json.dump(schema, f)
-    
+
     yield str(schema_file)
 
 

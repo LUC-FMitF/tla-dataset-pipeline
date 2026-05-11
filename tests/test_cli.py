@@ -1,9 +1,7 @@
 """Unit tests for the CLI module."""
 
 import argparse
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 from tladata.cli import (
     discover,
@@ -28,11 +26,11 @@ class TestDiscoverCommand:
             output=str(tmp_path / "output.jsonl"),
             schema="data_contracts/schemas/source_record.schema.json",
         )
-        
-        with patch("tladata.cli.get_github_client") as mock_client:
+
+        with patch("tladata.cli.get_github_client"):
             with patch("tladata.cli.DiscoveryPipeline") as mock_pipeline:
                 discover(args, test_config)
-                
+
                 # Verify DiscoveryPipeline was instantiated
                 mock_pipeline.assert_called_once()
 
@@ -44,12 +42,12 @@ class TestDiscoverCommand:
             output=str(tmp_path / "output.jsonl"),
             schema="data_contracts/schemas/source_record.schema.json",
         )
-        
+
         with patch("tladata.cli.get_github_client") as mock_client:
             mock_client.side_effect = ValueError("Test error")
-            
+
             result = discover(args, test_config)
-            
+
             # Should return error code
             assert result == 1
 
@@ -64,11 +62,11 @@ class TestSearchCommand:
         args = argparse.Namespace(
             output=str(tmp_path / "output.jsonl"),
         )
-        
-        with patch("tladata.cli.get_github_client") as mock_client:
+
+        with patch("tladata.cli.get_github_client"):
             with patch("tladata.cli.SearchService") as mock_service:
                 search(args, test_config)
-                
+
                 # Verify SearchService was instantiated
                 mock_service.assert_called_once()
 
@@ -84,9 +82,9 @@ class TestValidateCommand:
             manifest=temp_manifest_file,
             schema="data_contracts/schemas/source_record.schema.json",
         )
-        
+
         result = validate(args, test_config)
-        
+
         # Should execute without error (result could be 0 or 1 depending on validation)
         assert isinstance(result, int)
 
@@ -101,11 +99,11 @@ class TestFetchSeedsCommand:
         args = argparse.Namespace(
             output=str(tmp_path / "output.jsonl"),
         )
-        
-        with patch("tladata.cli.get_github_client") as mock_client:
+
+        with patch("tladata.cli.get_github_client"):
             with patch("tladata.cli.SeedFetcher") as mock_service:
                 fetch_seeds(args, test_config)
-                
+
                 # Verify SeedFetcher was instantiated
                 mock_service.assert_called_once()
 
@@ -121,15 +119,15 @@ class TestPullCommand:
             manifest=temp_manifest_file,
             output=str(tmp_path / "extracted"),
         )
-        
-        with patch("tladata.cli.get_github_client") as mock_client:
+
+        with patch("tladata.cli.get_github_client"):
             with patch("tladata.cli.FileExtractionHandler") as mock_handler:
                 mock_handler_instance = Mock()
                 mock_handler_instance.handle.return_value = 0
                 mock_handler.return_value = mock_handler_instance
-                
+
                 pull(args, test_config)
-                
+
                 # Verify handler was created and handle() was called
                 mock_handler.assert_called_once()
                 mock_handler_instance.handle.assert_called_once()
@@ -148,14 +146,14 @@ class TestPushToS3Command:
             prefix="raw",
             dry_run=True,
         )
-        
+
         with patch("tladata.cli.S3UploadHandler") as mock_handler:
             mock_handler_instance = Mock()
             mock_handler_instance.handle.return_value = 0
             mock_handler.return_value = mock_handler_instance
-            
+
             push_to_s3(args, test_config)
-            
+
             # Verify handler was created and handle() was called
             mock_handler.assert_called_once()
             mock_handler_instance.handle.assert_called_once()
@@ -173,14 +171,14 @@ class TestValidateManifestFunction:
             schema=temp_schema_file,
             verbose=False,
         )
-        
+
         with patch("tladata.cli.ManifestValidationHandler") as mock_handler:
             mock_handler_instance = Mock()
             mock_handler_instance.handle.return_value = 0
             mock_handler.return_value = mock_handler_instance
-            
+
             result = validate_manifest(args, test_config)
-            
+
             assert isinstance(result, int)
 
     def test_validate_manifest_handles_error(
@@ -192,12 +190,12 @@ class TestValidateManifestFunction:
             schema="/nonexistent/schema.json",
             verbose=False,
         )
-        
+
         with patch("tladata.cli.ManifestValidationHandler") as mock_handler:
             mock_handler.side_effect = FileNotFoundError("File not found")
-            
+
             result = validate_manifest(args, test_config)
-            
+
             # Should return error code
             assert result == 1
 
@@ -215,7 +213,7 @@ class TestCommandDispatchDict:
             "pull",
             "push-to-s3",
         }
-        
+
         # This test verifies the expected command names exist
         # In actual CLI, the dispatch dict is created in main_discover
         assert len(expected_commands) == 6

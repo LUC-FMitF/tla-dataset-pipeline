@@ -1,9 +1,7 @@
 """Unit tests for the config module."""
 
-import json
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -27,7 +25,7 @@ class TestGitHubAPILimits:
             max_retries=3,
             retry_delay=2,
         )
-        
+
         assert limits.request_timeout == 30
         assert limits.max_retries == 3
         assert limits.retry_delay == 2
@@ -39,7 +37,7 @@ class TestGitHubAPILimits:
             max_retries=3,
             retry_delay=2,
         )
-        
+
         assert limits.request_timeout > 0
         assert limits.max_retries > 0
         assert limits.retry_delay > 0
@@ -55,7 +53,7 @@ class TestDiscoveryLimits:
             max_results_per_query=50,
             call_delay=0.1,
         )
-        
+
         assert limits.max_repositories == 500
         assert limits.max_results_per_query == 50
         assert limits.call_delay == 0.1
@@ -71,7 +69,7 @@ class TestExtractionLimits:
             max_file_size=50_000_000,
             max_files_per_repo=100,
         )
-        
+
         assert limits.file_download_timeout == 60
         assert limits.max_file_size == 50_000_000
         assert limits.max_files_per_repo == 100
@@ -83,7 +81,7 @@ class TestUploadLimits:
     def test_upload_limits_creation(self) -> None:
         """Test creating UploadLimits."""
         limits = UploadLimits(batch_size=200)
-        
+
         assert limits.batch_size == 200
 
 
@@ -93,7 +91,7 @@ class TestValidationLimits:
     def test_validation_limits_creation(self) -> None:
         """Test creating ValidationLimits."""
         limits = ValidationLimits(max_validation_errors=50)
-        
+
         assert limits.max_validation_errors == 50
 
 
@@ -114,7 +112,7 @@ class TestLimitsConfig:
     def test_limits_config_load(self) -> None:
         """Test loading LimitsConfig from default file."""
         config = LimitsConfig.load()
-        
+
         assert config is not None
         assert isinstance(config.github_api, GitHubAPILimits)
         assert isinstance(config.discovery, DiscoveryLimits)
@@ -127,7 +125,7 @@ class TestLimitsConfig:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir)
             config_file = tmp_path / "test_limits.yaml"
-            
+
             # Create a test config file
             config_content = """
 github_api:
@@ -150,9 +148,9 @@ validation:
   max_validation_errors: 5
 """
             config_file.write_text(config_content)
-            
+
             config = LimitsConfig.load(str(config_file))
-            
+
             assert config.github_api.request_timeout == 15
             assert config.discovery.max_repositories == 200
             assert config.extraction.file_download_timeout == 45
@@ -169,9 +167,9 @@ validation:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir)
             config_file = tmp_path / "invalid.yaml"
-            
+
             # Write invalid YAML
             config_file.write_text("invalid: yaml: content:")
-            
+
             with pytest.raises(Exception):  # YAML parsing error
                 LimitsConfig.load(str(config_file))

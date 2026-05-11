@@ -6,7 +6,6 @@ replacing the legacy singleton pattern with dependency injection support.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 

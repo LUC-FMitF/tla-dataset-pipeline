@@ -1,6 +1,6 @@
 """Unit tests for the GitHub client module."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -17,7 +17,7 @@ class TestGithubClient:
     ) -> None:
         """Test GithubClient initializes with correct attributes."""
         client = GithubClient("test-token", github_api_limits)
-        
+
         assert client.base_url == "https://api.github.com"
         assert "Authorization" in client.headers
         assert client.headers["Authorization"] == "Bearer test-token"
@@ -30,7 +30,7 @@ class TestGithubClient:
     ) -> None:
         """Test GithubClient has requests.Session with retry adapter."""
         client = GithubClient("test-token", github_api_limits)
-        
+
         assert hasattr(client, "session")
         assert isinstance(client.session, requests.Session)
         assert "https://" in client.session.adapters
@@ -45,10 +45,10 @@ class TestGithubClient:
             mock_response.json.return_value = {"test": "data"}
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
-            
+
             client = GithubClient("test-token", github_api_limits)
             result = client.get("/repos/test/repo")
-            
+
             assert result == {"test": "data"}
             mock_get.assert_called_once()
 
@@ -61,11 +61,11 @@ class TestGithubClient:
             mock_response.json.return_value = {"items": []}
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
-            
+
             client = GithubClient("test-token", github_api_limits)
             params = {"q": "language:tlaplus", "per_page": 30}
             result = client.get("/search/repositories", params=params)
-            
+
             assert result == {"items": []}
             # Verify params were passed
             call_kwargs = mock_get.call_args[1]
@@ -80,10 +80,10 @@ class TestGithubClient:
             mock_response.json.return_value = {"test": "data"}
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
-            
+
             client = GithubClient("test-token", github_api_limits)
             result = client.get("/repos/test/repo", timeout=60)
-            
+
             assert result == {"test": "data"}
             # Verify custom timeout was used
             call_kwargs = mock_get.call_args[1]
@@ -98,10 +98,10 @@ class TestGithubClient:
             mock_response.json.return_value = {"test": "data"}
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
-            
+
             client = GithubClient("test-token", github_api_limits)
             result = client.get("/repos/test/repo")
-            
+
             assert result == {"test": "data"}
             # Verify default timeout was used
             call_kwargs = mock_get.call_args[1]
@@ -113,9 +113,9 @@ class TestGithubClient:
         """Test GitHub API GET request handles request exceptions."""
         with patch("requests.Session.get") as mock_get:
             mock_get.side_effect = requests.exceptions.ConnectionError("Connection failed")
-            
+
             client = GithubClient("test-token", github_api_limits)
-            
+
             with pytest.raises(RuntimeError, match="GitHub API request failed"):
                 client.get("/repos/test/repo")
 
@@ -129,9 +129,9 @@ class TestGithubClient:
                 "404 Not Found"
             )
             mock_get.return_value = mock_response
-            
+
             client = GithubClient("test-token", github_api_limits)
-            
+
             with pytest.raises(RuntimeError, match="GitHub API request failed"):
                 client.get("/repos/test/repo")
 
@@ -140,6 +140,6 @@ class TestGithubClient:
     ) -> None:
         """Test GitHub client headers include proper Accept header."""
         client = GithubClient("test-token", github_api_limits)
-        
+
         assert client.headers["Accept"] == "application/vnd.github+json"
         assert client.headers["Authorization"] == "Bearer test-token"
