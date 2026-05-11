@@ -1,28 +1,45 @@
 """Orchestration layer for discovery operations."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tladata.contracts.validate import validate_jsonl
+from tladata.discovery.base_service import DiscoveryService
 from tladata.discovery.github_client import GithubClient
 from tladata.discovery.github_search import (
     fetch_repo_metadata,
     search_repositories,
 )
 from tladata.discovery.manifest import merge_records, write_jsonl
-from tladata.utils.load_limits import load_limits
+from tladata.logging import get_logger
 from tladata.utils.load_seeds import load_queries, load_seed_repos
 
+if TYPE_CHECKING:
+    from tladata.config import DiscoveryLimits
 
-class DiscoveryPipeline:
+
+logger = get_logger(__name__)
+
+
+class DiscoveryPipeline(DiscoveryService):
     """Full discovery pipeline: seeds + search + write + validate."""
 
-    def __init__(self, client: GithubClient, output_path: str, schema_path: str):
-        self.client = client
-        self.output_path = output_path
+    def __init__(
+        self,
+        client: GithubClient,
+        output_path: str,
+        schema_path: str,
+        limits: "DiscoveryLimits",
+    ) -> None:
+        """Initialize the discovery pipeline.
+        
+        Args:
+            client: GitHub API client
+            output_path: Output path for discovered repositories
+            schema_path: Path to validation schema
+            limits: Discovery configuration limits
+        """
+        super().__init__(client, output_path, limits)
         self.schema_path = schema_path
-        limits = load_limits()
-        self.max_repositories = limits.get("discovery", "max_repositories", 5000)
-        self.max_results_per_query = limits.get("discovery", "max_results_per_query", 100)
 
     def run(self) -> None:
         """Execute the full discovery pipeline."""
@@ -33,7 +50,7 @@ class DiscoveryPipeline:
         discovered = self._run_searches(queries, discovered)
 
         write_jsonl(self.output_path, discovered.values())
-        print(f"Manifest written to: {self.output_path}")
+        self.logger.info(f"Manifest written to: {self.output_path}")
 
         self._validate()
 
@@ -41,8 +58,8 @@ class DiscoveryPipeline:
         """Fetch metadata for seeded repositories."""
         discovered: dict[str, dict[str, Any]] = {}
         for repo in seeds:
-            if len(discovered) >= self.max_repositories:
-                print(f"Reached max repositories limit ({self.max_repositories})")
+            if len(discovered) >= self.limits.max_repositories:
+                self.logger.info(f"Reached max repositories limit ({self.limits.max_repositories})")
                 break
             discovered[repo] = fetch_repo_metadata(self.client, repo, source="seed")
         return discovered
@@ -52,22 +69,24 @@ class DiscoveryPipeline:
     ) -> dict[str, dict[str, Any]]:
         """Run search queries and merge results."""
         for query in queries:
-            if len(discovered) >= self.max_repositories:
-                print(f"Reached max repositories limit ({self.max_repositories}), stopping search")
+            if len(discovered) >= self.limits.max_repositories:
+                self.logger.info(
+                    f"Reached max repositories limit ({self.limits.max_repositories}), stopping search"
+                )
                 break
 
             repos = search_repositories(self.client, query)
 
             # Limit results per query
-            repos_to_process = repos[: self.max_results_per_query]
-            if len(repos) > self.max_results_per_query:
-                print(
-                    f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})"
+            repos_to_process = repos[: self.limits.max_results_per_query]
+            if len(repos) > self.limits.max_results_per_query:
+                self.logger.info(
+                    f"Limiting search results for query '{query}' to {self.limits.max_results_per_query} (found {len(repos)})"
                 )
 
             for repo_dict in repos_to_process:
-                if len(discovered) >= self.max_repositories:
-                    print(f"Reached max repositories limit ({self.max_repositories})")
+                if len(discovered) >= self.limits.max_repositories:
+                    self.logger.info(f"Reached max repositories limit ({self.limits.max_repositories})")
                     break
 
                 repo_name = str(repo_dict.get("full_name", ""))
@@ -82,20 +101,13 @@ class DiscoveryPipeline:
         """Validate the output manifest."""
         success, errors = validate_jsonl(self.output_path, self.schema_path)
         if success:
-            print(f"Validation passed against: {self.schema_path}")
+            self.logger.info(f"Validation passed against: {self.schema_path}")
         else:
             raise RuntimeError("Validation failed:\n" + "\n".join(errors))
 
 
-class SearchService:
+class SearchService(DiscoveryService):
     """Search-only service."""
-
-    def __init__(self, client: GithubClient, output_path: str):
-        self.client = client
-        self.output_path = output_path
-        limits = load_limits()
-        self.max_repositories = limits.get("discovery", "max_repositories", 5000)
-        self.max_results_per_query = limits.get("discovery", "max_results_per_query", 100)
 
     def run(self) -> None:
         """Execute search queries and write results."""
@@ -103,22 +115,24 @@ class SearchService:
         discovered: dict[str, dict[str, Any]] = {}
 
         for query in queries:
-            if len(discovered) >= self.max_repositories:
-                print(f"Reached max repositories limit ({self.max_repositories}), stopping search")
+            if len(discovered) >= self.limits.max_repositories:
+                self.logger.info(
+                    f"Reached max repositories limit ({self.limits.max_repositories}), stopping search"
+                )
                 break
 
             repos = search_repositories(self.client, query)
 
             # Limit results per query
-            repos_to_process = repos[: self.max_results_per_query]
-            if len(repos) > self.max_results_per_query:
-                print(
-                    f"Limiting search results for query '{query}' to {self.max_results_per_query} (found {len(repos)})"
+            repos_to_process = repos[: self.limits.max_results_per_query]
+            if len(repos) > self.limits.max_results_per_query:
+                self.logger.info(
+                    f"Limiting search results for query '{query}' to {self.limits.max_results_per_query} (found {len(repos)})"
                 )
 
             for repo_dict in repos_to_process:
-                if len(discovered) >= self.max_repositories:
-                    print(f"Reached max repositories limit ({self.max_repositories})")
+                if len(discovered) >= self.limits.max_repositories:
+                    self.logger.info(f"Reached max repositories limit ({self.limits.max_repositories})")
                     break
 
                 repo_name = str(repo_dict.get("full_name", ""))
@@ -129,15 +143,11 @@ class SearchService:
                     discovered[repo_name] = new_metadata
 
         write_jsonl(self.output_path, discovered.values())
-        print(f"Search results written to: {self.output_path}")
+        self.logger.info(f"Search results written to: {self.output_path}")
 
 
-class SeedFetcher:
+class SeedFetcher(DiscoveryService):
     """Fetches metadata for seeded repositories only."""
-
-    def __init__(self, client: GithubClient, output_path: str):
-        self.client = client
-        self.output_path = output_path
 
     def run(self) -> None:
         """Fetch seeded repos and write results."""
@@ -148,20 +158,27 @@ class SeedFetcher:
             discovered[repo] = fetch_repo_metadata(self.client, repo, source="seed")
 
         write_jsonl(self.output_path, discovered.values())
-        print(f"Seed repos metadata written to: {self.output_path}")
+        self.logger.info(f"Seed repos metadata written to: {self.output_path}")
 
 
 class ManifestValidator:
     """Validates manifests against schemas."""
 
-    def __init__(self, manifest_path: str, schema_path: str):
+    def __init__(self, manifest_path: str, schema_path: str) -> None:
+        """Initialize the manifest validator.
+        
+        Args:
+            manifest_path: Path to JSONL manifest file
+            schema_path: Path to JSON schema file
+        """
         self.manifest_path = manifest_path
         self.schema_path = schema_path
+        self.logger = get_logger(self.__class__.__name__)
 
     def validate(self) -> None:
         """Validate the manifest."""
         success, errors = validate_jsonl(self.manifest_path, self.schema_path)
         if success:
-            print(f"Validation passed: {self.manifest_path} against {self.schema_path}")
+            self.logger.info(f"Validation passed: {self.manifest_path} against {self.schema_path}")
         else:
             raise RuntimeError("Validation failed:\n" + "\n".join(errors))
