@@ -1,9 +1,12 @@
 """Upload files to AWS S3."""
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from tladata.logging import get_logger
+
+if TYPE_CHECKING:
+    from tladata.contracts.types import UploadStats
 
 logger = get_logger(__name__)
 
@@ -35,7 +38,7 @@ class S3Uploader:
         self.region = region
         self.s3_client = boto3.client("s3", region_name=region)  # type: ignore[attr-defined]
 
-    def upload_directory(self, local_dir: str, dry_run: bool = False) -> dict[str, Any]:
+    def upload_directory(self, local_dir: str, dry_run: bool = False) -> UploadStats:
         """
         Upload directory of extracted files to S3.
 
@@ -50,11 +53,12 @@ class S3Uploader:
         if not local_path.is_dir():
             raise ValueError(f"Directory not found: {local_dir}")
 
-        stats: dict[str, Any] = {
+        stats: UploadStats = {
             "total_files": 0,
             "uploaded_files": 0,
             "skipped_files": 0,
             "errors": [],
+            "skipped_reasons": [],
         }
 
         for file_path in local_path.rglob("*"):
@@ -69,7 +73,7 @@ class S3Uploader:
         return stats
 
     def _upload_file(
-        self, file_path: Path, base_path: Path, dry_run: bool, stats: dict[str, Any]
+        self, file_path: Path, base_path: Path, dry_run: bool, stats: UploadStats
     ) -> None:
         """Upload a single file to S3."""
         # Compute S3 key as prefix + relative path

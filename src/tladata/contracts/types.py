@@ -10,14 +10,14 @@ class UploadStats(TypedDict):
         total_files: Total files processed
         uploaded_files: Number of files successfully uploaded
         skipped_files: Number of files skipped (already in S3)
-        errors: Number of files that failed to upload
+        errors: List of error messages for files that failed to upload
         skipped_reasons: List of reasons files were skipped
     """
 
     total_files: int
     uploaded_files: int
     skipped_files: int
-    errors: int
+    errors: list[str]
     skipped_reasons: list[str]
 
 
