@@ -46,7 +46,7 @@ def write_jsonl(path: str, records: Iterable[dict[str, Any]]) -> None:
     formatted_path = Path(path).with_stem(Path(path).stem + "_formatted")
     try:
         with open(path) as f:
-            data = json.load(f)
+            data = [json.loads(line) for line in f if line.strip()]
 
         with open(formatted_path, "w") as f:
             json.dump(data, f, indent=2, sort_keys=True)
