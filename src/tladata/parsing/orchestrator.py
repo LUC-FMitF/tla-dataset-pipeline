@@ -1,10 +1,11 @@
 """Unified orchestrator for iterative TLA+ prompt execution."""
 
 import json
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from tladata.logging import get_logger
 from tladata.parsing.prompt_loader import PromptLoader
@@ -49,7 +50,7 @@ class PromptOrchestrator:
         """Create the chat model lazily so the module can be imported without langchain."""
         if self._llm is None:
 
-            self._llm = ChatOpenAI(api_key=self.api_key, model=self.model_name, temperature=0)
+            self._llm = ChatOpenAI(api_key=SecretStr(self.api_key), model=self.model_name, temperature=0)
 
         return self._llm
 
@@ -88,9 +89,13 @@ class PromptOrchestrator:
             if stage == "v1":
                 return self._run_v1(tla_content)
             elif stage == "v2":
-                return self._run_v2(tla_content, previous_result)
+                v1_result = previous_result
+                assert v1_result is not None
+                return self._run_v2(tla_content, v1_result)
             else:  # v3
-                return self._run_v3(tla_content, previous_result)
+                v2_result = previous_result
+                assert v2_result is not None
+                return self._run_v3(tla_content, v2_result)
         except Exception as e:
             self.logger.error(f"Stage {stage.upper()} failed: {e}")
             raise RuntimeError(f"Stage {stage.upper()} execution failed: {e}") from e
@@ -293,7 +298,7 @@ class PromptOrchestrator:
             # Sanitize control characters before parsing
             json_str = self._sanitize_json_string(json_str)
 
-            return json.loads(json_str)
+            return cast(dict[str, Any], json.loads(json_str))
         except json.JSONDecodeError as e:
             self.logger.error(f"Failed to parse JSON from LLM response: {e}")
             self.logger.error(f"Extracted JSON attempt (first 500 chars): {json_str[:500] if 'json_str' in locals() else 'N/A'}")

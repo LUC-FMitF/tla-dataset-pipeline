@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from tladata.logging import get_logger
 
@@ -247,7 +247,7 @@ class PromptResultWriter:
             with open(filepath) as f:
                 data = json.load(f)
             self.logger.info(f"Result loaded from {filepath}")
-            return data
+            return cast(dict[str, Any], data)
         except FileNotFoundError:
             self.logger.error(f"Result file not found: {filepath}")
             raise
