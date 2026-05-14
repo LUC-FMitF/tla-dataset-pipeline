@@ -23,16 +23,26 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
     "requests>=2.31.0",
     "jsonschema>=4.20.0",
-    "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
+config = [
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+]
+s3 = [
+    "boto3>=1.43.0",
+]
+parsing = [
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.10",
+    "langchain-openai>=0.0.5",
+]
 dev = [
     "black>=23.7.0",
     "ruff>=0.0.287",
@@ -44,8 +54,14 @@ dev = [
     "pytest-cov>=4.1.0",
     "python-dotenv>=1.0.0",
 ]
-s3 = [
-    "boto3>=1.26.0",
+all = [
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+    "boto3>=1.43.0",
+    "botocore>=1.43.0",
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.10",
+    "langchain-openai>=0.0.5",
 ]
 
 [project.urls]
@@ -57,7 +73,7 @@ Issues = "https://github.com/LUC-FMitF/tla-dataset-pipeline/issues"
 tladata = "tladata.cli:main_discover"
 
 [tool.setuptools]
-packages = ["tladata", "tladata.contracts", "tladata.discovery", "tladata.extraction", "tladata.utils"]
+packages = ["tladata", "tladata.contracts", "tladata.discovery", "tladata.extraction", "tladata.parsing", "tladata.utils"]
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
@@ -109,7 +125,3 @@ module = "tladata.*"
 ignore_errors = false
 disallow_untyped_calls = false
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=src/tladata --cov-report=term-out --cov-report=html"

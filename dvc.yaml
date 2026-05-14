@@ -16,3 +16,11 @@ stages:
       - src/tladata/extraction
     outs:
       - data/raw
+
+  parse:
+    cmd: tladata parse data/raw --output data/parsed --version 3
+    deps:
+      - data/raw
+      - src/tladata/parsing
+    outs:
+      - data/parsed
