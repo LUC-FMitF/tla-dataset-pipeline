@@ -259,12 +259,12 @@ class TestPromptOrchestrator:
 
     def test_parse_json_response_with_trailing_text(self, api_key: str) -> None:
         """Test that JSON parsing handles LLM responses with trailing text (like changelogs).
-        
+
         This tests the fix for the "Extra data" error that occurred when LLM responses
         included content after the JSON object (e.g., CHANGE LOG sections).
         """
         orchestrator = PromptOrchestrator(api_key)
-        
+
         # Simulate an LLM response with JSON followed by a changelog
         json_content = {"id": "test", "specification": "x := 0", "variables": ["x"]}
         response_text = f"""{json.dumps(json_content)}
@@ -273,7 +273,7 @@ CHANGE LOG:
 - Fixed parsing logic
 - Improved error handling
 - Added validation"""
-        
+
         # Should extract just the JSON without the changelog
         result = orchestrator._parse_json_response(response_text)
         assert result == json_content
@@ -281,28 +281,28 @@ CHANGE LOG:
     def test_parse_json_response_with_nested_objects(self, api_key: str) -> None:
         """Test JSON parsing with nested objects and arrays."""
         orchestrator = PromptOrchestrator(api_key)
-        
+
         json_content = {
             "id": "test",
             "nested": {"key": "value", "array": [1, 2, 3]},
             "specs": [{"name": "spec1"}, {"name": "spec2"}]
         }
         response_text = f"Here is the JSON:\n{json.dumps(json_content)}\n\nAdditional notes follow."
-        
+
         result = orchestrator._parse_json_response(response_text)
         assert result == json_content
 
     def test_parse_json_response_with_escaped_strings(self, api_key: str) -> None:
         """Test JSON parsing handles escaped quotes in strings correctly."""
         orchestrator = PromptOrchestrator(api_key)
-        
+
         json_content = {
             "id": "test",
             "text": 'This has "escaped" quotes and a brace } inside',
             "formula": "x = {1, 2, 3}"
         }
         response_text = json.dumps(json_content) + "\n\nExtra text with } braces"
-        
+
         result = orchestrator._parse_json_response(response_text)
         assert result == json_content
         assert "escaped" in result["text"]
@@ -310,17 +310,17 @@ CHANGE LOG:
 
     def test_parse_json_with_unescaped_control_characters(self, api_key: str) -> None:
         """Test JSON parsing handles unescaped control characters in LLM response.
-        
+
         This tests the fix for "Invalid control character" errors that occur when
         LLM responses contain literal newlines/tabs in JSON strings instead of
         properly escaped ones.
         """
         orchestrator = PromptOrchestrator(api_key)
-        
+
         # Simulate a JSON with literal control characters (as LLM would produce)
         json_content = {"id": "test", "text": "Line 1\nLine 2\tTabbed"}
         response_text = '{"id": "test", "text": "Line 1\nLine 2\tTabbed"}\n\nExtra notes'
-        
+
         # Should successfully parse after sanitizing control characters
         result = orchestrator._parse_json_response(response_text)
         assert result == json_content
@@ -329,11 +329,11 @@ CHANGE LOG:
     def test_sanitize_json_string_basic(self, api_key: str) -> None:
         """Test _sanitize_json_string with basic control characters."""
         orchestrator = PromptOrchestrator(api_key)
-        
+
         # JSON with literal newline and tab inside string
         dirty_json = '{"text": "line1\nline2\ttab"}'
         clean_json = orchestrator._sanitize_json_string(dirty_json)
-        
+
         # Should be able to parse after sanitization
         result = json.loads(clean_json)
         assert result["text"] == "line1\nline2\ttab"
@@ -341,11 +341,11 @@ CHANGE LOG:
     def test_sanitize_json_preserves_escaped_sequences(self, api_key: str) -> None:
         """Test that sanitization doesn't double-escape already escaped sequences."""
         orchestrator = PromptOrchestrator(api_key)
-        
+
         # JSON with already-escaped sequences
         already_escaped = '{"text": "line1\\nline2\\ttab"}'
         sanitized = orchestrator._sanitize_json_string(already_escaped)
-        
+
         # Should preserve the escaping
         result = json.loads(sanitized)
         assert result["text"] == "line1\nline2\ttab"
@@ -353,11 +353,11 @@ CHANGE LOG:
     def test_sanitize_json_with_carriage_returns(self, api_key: str) -> None:
         """Test sanitization of carriage return characters."""
         orchestrator = PromptOrchestrator(api_key)
-        
+
         # JSON with literal carriage return
         dirty_json = '{"text": "line1\rline2"}'
         clean_json = orchestrator._sanitize_json_string(dirty_json)
-        
+
         result = json.loads(clean_json)
         assert result["text"] == "line1\rline2"
 

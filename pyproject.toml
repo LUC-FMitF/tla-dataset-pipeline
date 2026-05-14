@@ -77,7 +77,7 @@ packages = ["tladata", "tladata.contracts", "tladata.discovery", "tladata.extrac
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-tladata = ["py.typed"]
+tladata = ["py.typed", "prompts/*"]
 
 [tool.black]
 line-length = 100
