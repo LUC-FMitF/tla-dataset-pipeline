@@ -3,7 +3,7 @@
 import json
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -98,7 +98,7 @@ def mock_github_client(github_api_limits: GitHubAPILimits) -> GithubClient:
     """Create a mock GitHub client for testing."""
     with patch.object(GithubClient, "get") as mock_get:
         client = GithubClient("test-token", github_api_limits)
-        client.get = mock_get  # type: ignore[assignment]
+        client.get = cast(Any, mock_get)
         return client
 
 

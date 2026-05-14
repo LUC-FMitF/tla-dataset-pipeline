@@ -12,9 +12,7 @@ from tladata.discovery.github_client import GithubClient
 class TestGithubClient:
     """Test GithubClient initialization and methods."""
 
-    def test_github_client_initialization(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_initialization(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GithubClient initializes with correct attributes."""
         client = GithubClient("test-token", github_api_limits)
 
@@ -25,9 +23,7 @@ class TestGithubClient:
         assert client.max_retries == github_api_limits.max_retries
         assert client.session is not None
 
-    def test_github_client_has_session(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_has_session(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GithubClient has requests.Session with retry adapter."""
         client = GithubClient("test-token", github_api_limits)
 
@@ -36,9 +32,7 @@ class TestGithubClient:
         assert "https://" in client.session.adapters
         assert "http://" in client.session.adapters
 
-    def test_github_client_get_success(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_get_success(self, github_api_limits: GitHubAPILimits) -> None:
         """Test successful GitHub API GET request."""
         with patch("requests.Session.get") as mock_get:
             mock_response = Mock()
@@ -52,9 +46,7 @@ class TestGithubClient:
             assert result == {"test": "data"}
             mock_get.assert_called_once()
 
-    def test_github_client_get_with_params(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_get_with_params(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GitHub API GET request with query parameters."""
         with patch("requests.Session.get") as mock_get:
             mock_response = Mock()
@@ -107,9 +99,7 @@ class TestGithubClient:
             call_kwargs = mock_get.call_args[1]
             assert call_kwargs["timeout"] == github_api_limits.request_timeout
 
-    def test_github_client_get_request_exception(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_get_request_exception(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GitHub API GET request handles request exceptions."""
         with patch("requests.Session.get") as mock_get:
             mock_get.side_effect = requests.exceptions.ConnectionError("Connection failed")
@@ -119,9 +109,7 @@ class TestGithubClient:
             with pytest.raises(RuntimeError, match="GitHub API request failed"):
                 client.get("/repos/test/repo")
 
-    def test_github_client_get_http_error(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_get_http_error(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GitHub API GET request handles HTTP errors."""
         with patch("requests.Session.get") as mock_get:
             mock_response = Mock()
@@ -135,9 +123,7 @@ class TestGithubClient:
             with pytest.raises(RuntimeError, match="GitHub API request failed"):
                 client.get("/repos/test/repo")
 
-    def test_github_client_headers_set_correctly(
-        self, github_api_limits: GitHubAPILimits
-    ) -> None:
+    def test_github_client_headers_set_correctly(self, github_api_limits: GitHubAPILimits) -> None:
         """Test GitHub client headers include proper Accept header."""
         client = GithubClient("test-token", github_api_limits)
 

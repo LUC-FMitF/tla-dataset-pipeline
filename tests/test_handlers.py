@@ -25,6 +25,7 @@ class TestCLIHandlerBase:
 
         class IncompleteHandler(CLIHandler):
             """Handler without handle method."""
+
             pass
 
         with pytest.raises(TypeError):
@@ -48,16 +49,12 @@ class TestCLIHandlerBase:
 class TestManifestValidationHandler:
     """Test ManifestValidationHandler."""
 
-    def test_manifest_validation_handler_inheritance(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_manifest_validation_handler_inheritance(self, test_config: LimitsConfig) -> None:
         """Test ManifestValidationHandler inherits from CLIHandler."""
         handler = ManifestValidationHandler(test_config)
         assert isinstance(handler, CLIHandler)
 
-    def test_manifest_validation_handler_has_handle_method(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_manifest_validation_handler_has_handle_method(self, test_config: LimitsConfig) -> None:
         """Test ManifestValidationHandler has handle() method."""
         handler = ManifestValidationHandler(test_config)
         assert hasattr(handler, "handle")
@@ -84,22 +81,20 @@ class TestManifestValidationHandler:
 class TestFileExtractionHandler:
     """Test FileExtractionHandler."""
 
-    def test_file_extraction_handler_inheritance(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_file_extraction_handler_inheritance(self, test_config: LimitsConfig) -> None:
         """Test FileExtractionHandler inherits from CLIHandler."""
         with patch("tladata.cli_handler.get_logger"):
             from tladata.discovery.github_client import GithubClient
+
             client = Mock(spec=GithubClient)
             handler = FileExtractionHandler(test_config, client)
             assert isinstance(handler, CLIHandler)
 
-    def test_file_extraction_handler_has_handle_method(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_file_extraction_handler_has_handle_method(self, test_config: LimitsConfig) -> None:
         """Test FileExtractionHandler has handle() method."""
         with patch("tladata.cli_handler.get_logger"):
             from tladata.discovery.github_client import GithubClient
+
             client = Mock(spec=GithubClient)
             handler = FileExtractionHandler(test_config, client)
             assert hasattr(handler, "handle")
@@ -111,6 +106,7 @@ class TestFileExtractionHandler:
         """Test FileExtractionHandler handles missing manifest."""
         with patch("tladata.cli_handler.get_logger"):
             from tladata.discovery.github_client import GithubClient
+
             client = Mock(spec=GithubClient)
             handler = FileExtractionHandler(test_config, client)
 
@@ -130,17 +126,13 @@ class TestFileExtractionHandler:
 class TestS3UploadHandler:
     """Test S3UploadHandler."""
 
-    def test_s3_upload_handler_inheritance(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_s3_upload_handler_inheritance(self, test_config: LimitsConfig) -> None:
         """Test S3UploadHandler inherits from CLIHandler."""
         with patch("tladata.cli_handler.get_logger"):
             handler = S3UploadHandler(test_config)
             assert isinstance(handler, CLIHandler)
 
-    def test_s3_upload_handler_has_handle_method(
-        self, test_config: LimitsConfig
-    ) -> None:
+    def test_s3_upload_handler_has_handle_method(self, test_config: LimitsConfig) -> None:
         """Test S3UploadHandler has handle() method."""
         with patch("tladata.cli_handler.get_logger"):
             handler = S3UploadHandler(test_config)
@@ -167,9 +159,7 @@ class TestS3UploadHandler:
             assert isinstance(result, int)
             assert result == 1
 
-    def test_s3_upload_handler_dry_run(
-        self, test_config: LimitsConfig, tmp_path
-    ) -> None:
+    def test_s3_upload_handler_dry_run(self, test_config: LimitsConfig, tmp_path) -> None:
         """Test S3UploadHandler respects dry_run flag."""
         with patch("tladata.cli_handler.get_logger"):
             # Create a test directory with a file
