@@ -223,7 +223,7 @@ def main_discover() -> int:
         "--model",
         default="gpt-4",
         help="Model spec: provider:model or bare model name (default: gpt-4). "
-             "Examples: ollama:llama3, openai:gpt-4o, huggingface:mistralai/Mistral-7B-Instruct-v0.2",
+        "Examples: ollama:llama3, openai:gpt-4o, huggingface:mistralai/Mistral-7B-Instruct-v0.2",
     )
     parse_parser.add_argument(
         "--version",

@@ -65,7 +65,9 @@ def _make_huggingface(model_name: str, api_key: str | None) -> Any:
     try:
         from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
     except ImportError as e:
-        raise ImportError("Install langchain-huggingface: pip install 'tladata[huggingface]'") from e
+        raise ImportError(
+            "Install langchain-huggingface: pip install 'tladata[huggingface]'"
+        ) from e
 
     endpoint = HuggingFaceEndpoint(
         repo_id=model_name,

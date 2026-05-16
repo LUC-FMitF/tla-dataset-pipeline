@@ -103,7 +103,9 @@ class PromptOrchestrator:
         prompt_text = self.prompt_loader.load_v1_prompt()
 
         # Construct message: prompt + TLA+ file content
-        full_message = f"{prompt_text}\n\n---\n\nHere is the TLA+ file:\n\n```tla\n{tla_content}\n```"
+        full_message = (
+            f"{prompt_text}\n\n---\n\nHere is the TLA+ file:\n\n```tla\n{tla_content}\n```"
+        )
 
         # Use HumanMessage directly to avoid template parsing
         messages = [HumanMessage(content=full_message)]
@@ -281,7 +283,9 @@ class PromptOrchestrator:
                             break
 
             if brace_count != 0:
-                self.logger.error(f"Unmatched braces in JSON. LLM response (first 500 chars): {response_text[:500]}")
+                self.logger.error(
+                    f"Unmatched braces in JSON. LLM response (first 500 chars): {response_text[:500]}"
+                )
                 raise ValueError("Unmatched braces in JSON object")
 
             json_str = response_text[json_start:json_end]
@@ -292,7 +296,9 @@ class PromptOrchestrator:
             return cast(dict[str, Any], json.loads(json_str))
         except json.JSONDecodeError as e:
             self.logger.error(f"Failed to parse JSON from LLM response: {e}")
-            self.logger.error(f"Extracted JSON attempt (first 500 chars): {json_str[:500] if 'json_str' in locals() else 'N/A'}")
+            self.logger.error(
+                f"Extracted JSON attempt (first 500 chars): {json_str[:500] if 'json_str' in locals() else 'N/A'}"
+            )
             raise ValueError(f"Invalid JSON in LLM response: {e}") from e
 
     def _validate_tla_content(self, content: str) -> None:
