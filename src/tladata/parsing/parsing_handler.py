@@ -1,14 +1,24 @@
-"""Handler for TLA+ prompt-based parsing operations."""
-
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from tladata.cli_handler import CLIHandler
 from tladata.parsing.pipeline import PromptPipeline
+from tladata.parsing.providers import _parse_spec
 
 if TYPE_CHECKING:
     import argparse
+
+
+def _resolve_api_key(model_spec: str) -> str | None:
+    provider, _ = _parse_spec(model_spec)
+    if provider == "openai":
+        return os.environ.get("OPENAI_API_KEY")
+    if provider == "anthropic":
+        return os.environ.get("ANTHROPIC_API_KEY")
+    if provider == "huggingface":
+        return os.environ.get("HF_TOKEN")
+    return None
 
 
 class ParsingHandler(CLIHandler):
@@ -36,23 +46,18 @@ class ParsingHandler(CLIHandler):
             Exit code (0 for success, 1 for failure)
         """
         try:
-            # Get API key from environment
-            api_key = os.environ.get("OPENAI_API_KEY")
-            if not api_key:
-                self.logger.error("OPENAI_API_KEY environment variable is not set")
-                return 1
+            model_spec = getattr(args, "model", "gpt-4")
+            api_key = _resolve_api_key(model_spec)
 
-            # Validate inputs
             input_path = Path(args.input)
             if not input_path.exists():
                 self.logger.error(f"Input path does not exist: {args.input}")
                 return 1
 
-            # Initialize pipeline
             pipeline = PromptPipeline(
-                api_key=api_key,
                 output_dir=args.output,
-                model_name=getattr(args, "model", "gpt-4"),
+                model_spec=model_spec,
+                api_key=api_key,
             )
 
             # Determine version and run appropriate pipeline

@@ -19,34 +19,30 @@ class PromptPipeline:
 
     def __init__(
         self,
-        api_key: str,
         output_dir: str,
-        model_name: str = "gpt-4",
+        model_spec: str = "gpt-4",
+        api_key: str | None = None,
         prompt_loader: PromptLoader | None = None,
     ) -> None:
         """Initialize the prompt pipeline.
 
         Args:
-            api_key: OpenAI API key for LLM access
             output_dir: Directory for saving results
-            model_name: LLM model to use (default: gpt-4)
+            model_spec: Provider-qualified model string (default: gpt-4)
+            api_key: API key for providers that require one
             prompt_loader: Optional PromptLoader for custom prompts
 
         Raises:
-            ValueError: If api_key or output_dir is empty
+            ValueError: If output_dir is empty
         """
-        if not api_key:
-            raise ValueError("API key cannot be empty")
         if not output_dir:
             raise ValueError("Output directory cannot be empty")
 
-        self.api_key = api_key
-        self.model_name = model_name
+        self.model_spec = model_spec
         self.result_writer = PromptResultWriter(output_dir)
         self.logger = get_logger(self.__class__.__name__)
 
-        # Initialize orchestrator with optional custom prompt loader
-        self.orchestrator = PromptOrchestrator(api_key, model_name, prompt_loader)
+        self.orchestrator = PromptOrchestrator(model_spec, api_key, prompt_loader)
 
     def run_full_pipeline(
         self,

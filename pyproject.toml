@@ -43,6 +43,18 @@ parsing = [
     "langchain-community>=0.0.10",
     "langchain-openai>=0.0.5",
 ]
+ollama = [
+    "langchain>=0.1.0",
+    "langchain-ollama>=0.1.0",
+]
+huggingface = [
+    "langchain>=0.1.0",
+    "langchain-huggingface>=0.0.3",
+]
+anthropic = [
+    "langchain>=0.1.0",
+    "langchain-anthropic>=0.1.0",
+]
 dev = [
     "black>=23.7.0",
     "ruff>=0.0.287",
@@ -62,6 +74,9 @@ all = [
     "langchain>=0.1.0",
     "langchain-community>=0.0.10",
     "langchain-openai>=0.0.5",
+    "langchain-ollama>=0.1.0",
+    "langchain-huggingface>=0.0.3",
+    "langchain-anthropic>=0.1.0",
 ]
 
 [project.urls]

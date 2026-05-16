@@ -17,6 +17,7 @@ from tladata.discovery.pipeline import (
 )
 from tladata.extraction.file_extraction_handler import FileExtractionHandler
 from tladata.extraction.s3_upload_handler import S3UploadHandler
+from tladata.parsing.parsing_handler import ParsingHandler
 
 if TYPE_CHECKING:
     pass
@@ -116,6 +117,11 @@ def pull(args: argparse.Namespace, config: LimitsConfig) -> int:
         return 1
 
 
+def parse(args: argparse.Namespace, config: LimitsConfig) -> int:
+    handler = ParsingHandler()
+    return handler.handle(args)
+
+
 def push_to_s3(args: argparse.Namespace, config: LimitsConfig) -> int:
     """Push extracted files to AWS S3."""
     handler = S3UploadHandler(config)
@@ -199,6 +205,40 @@ def main_discover() -> int:
         help="Output directory for extracted files (default: data/raw)",
     )
 
+    # parse
+    parse_parser = subparsers.add_parser(
+        "parse",
+        help="Run LLM-based parsing on TLA+ files",
+    )
+    parse_parser.add_argument(
+        "input",
+        help="Path to a TLA+ file or directory of TLA+ files",
+    )
+    parse_parser.add_argument(
+        "--output",
+        default="data/parsed",
+        help="Output directory for results (default: data/parsed)",
+    )
+    parse_parser.add_argument(
+        "--model",
+        default="gpt-4",
+        help="Model spec: provider:model or bare model name (default: gpt-4). "
+        "Examples: ollama:llama3, openai:gpt-4o, huggingface:mistralai/Mistral-7B-Instruct-v0.2",
+    )
+    parse_parser.add_argument(
+        "--version",
+        type=int,
+        default=3,
+        choices=[1, 2, 3],
+        help="Pipeline version to run (default: 3)",
+    )
+    parse_parser.add_argument(
+        "--no-skip",
+        dest="skip_existing",
+        action="store_false",
+        help="Re-process files even if results already exist",
+    )
+
     # push-to-s3
     push_parser = subparsers.add_parser(
         "push-to-s3",
@@ -248,6 +288,7 @@ def main_discover() -> int:
         "validate": validate,
         "fetch-seeds": fetch_seeds,
         "pull": pull,
+        "parse": parse,
         "push-to-s3": push_to_s3,
     }
 
