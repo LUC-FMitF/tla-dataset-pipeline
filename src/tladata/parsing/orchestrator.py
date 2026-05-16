@@ -4,11 +4,10 @@ import json
 from typing import Any, Optional, cast
 
 from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
-from pydantic import SecretStr
 
 from tladata.logging import get_logger
 from tladata.parsing.prompt_loader import PromptLoader
+from tladata.parsing.providers import create_llm
 
 
 class PromptOrchestrator:
@@ -23,25 +22,19 @@ class PromptOrchestrator:
 
     def __init__(
         self,
-        api_key: str,
-        model_name: str = "gpt-4",
+        model_spec: str = "gpt-4",
+        api_key: Optional[str] = None,
         prompt_loader: Optional[PromptLoader] = None,
     ) -> None:
         """Initialize the orchestrator.
 
         Args:
-            api_key: OpenAI API key for LLM access
-            model_name: LLM model to use (default: gpt-4)
+            model_spec: Provider-qualified model string (default: gpt-4)
+            api_key: API key for providers that require one
             prompt_loader: PromptLoader instance. If None, creates default loader.
-
-        Raises:
-            ValueError: If api_key is empty or None
         """
-        if not api_key:
-            raise ValueError("API key cannot be empty")
-
+        self.model_spec = model_spec
         self.api_key = api_key
-        self.model_name = model_name
         self._llm: Any | None = None
         self.prompt_loader = prompt_loader or PromptLoader()
         self.logger = get_logger(self.__class__.__name__)
@@ -49,9 +42,7 @@ class PromptOrchestrator:
     def _get_llm(self) -> Any:
         """Create the chat model lazily so the module can be imported without langchain."""
         if self._llm is None:
-
-            self._llm = ChatOpenAI(api_key=SecretStr(self.api_key), model=self.model_name, temperature=0)
-
+            self._llm = create_llm(self.model_spec, self.api_key)
         return self._llm
 
     def run_stage(
