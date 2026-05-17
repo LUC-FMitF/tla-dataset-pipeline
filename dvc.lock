@@ -13,28 +13,28 @@ stages:
       size: 493
     - path: src/tladata/discovery
       hash: md5
-      md5: 5ad12a93c49ff51155bb6c7e0da42c70.dir
+      md5: 5ab8c05cf383bf3511dfcbf4920a9a6d.dir
       size: 41072
       nfiles: 12
     outs:
     - path: manifests/sources/sources_latest.jsonl
       hash: md5
-      md5: 87b12f629d88e192523a068d1a206c8c
+      md5: 4c80230c03689cdb951710466653a172
       size: 4439
     - path: manifests/sources/sources_latest_formatted.jsonl
       hash: md5
-      md5: c6535e00b6b1b7fd955a98d1d79f8e91
+      md5: 9546f9e33d984067a28ff36959eb4724
       size: 5193
   pull:
     cmd: tladata pull
     deps:
     - path: manifests/sources/sources_latest.jsonl
       hash: md5
-      md5: 87b12f629d88e192523a068d1a206c8c
+      md5: 4c80230c03689cdb951710466653a172
       size: 4439
     - path: src/tladata/extraction
       hash: md5
-      md5: 2198ef9a2dcca8bb928ae5f32ce3824d.dir
+      md5: 43282ef027a977a65db290c71e9da544.dir
       size: 48259
       nfiles: 11
     outs:
